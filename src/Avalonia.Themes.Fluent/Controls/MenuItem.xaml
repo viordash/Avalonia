@@ -72,6 +72,8 @@
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"
+                                  SharedSizeGroup="ToggleIcon" />
+                <ColumnDefinition Width="Auto"
                                   SharedSizeGroup="MenuItemIcon" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto"
@@ -79,8 +81,14 @@
                 <ColumnDefinition Width="Auto"
                                   SharedSizeGroup="MenuItemChevron" />
               </Grid.ColumnDefinitions>
-
-              <Viewbox Name="PART_IconPresenter"
+              
+              <Viewbox Grid.Column="0"
+                       x:Name="PART_ToggleIconPresenter"
+                       Margin="{DynamicResource MenuIconPresenterMargin}"
+                       Width="16" />
+              
+              <Viewbox Grid.Column="1"
+                       Name="PART_IconPresenter"
                        Margin="{DynamicResource MenuIconPresenterMargin}"
                        StretchDirection="DownOnly"
                        HorizontalAlignment="Center"
@@ -96,9 +104,9 @@
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Stretch"
                                 RecognizesAccessKey="True"
-                                Grid.Column="1"/>
+                                Grid.Column="2"/>
               <TextBlock x:Name="PART_InputGestureText"
-                         Grid.Column="2"
+                         Grid.Column="3"
                          Classes="CaptionTextBlockStyle"
                          Margin="{DynamicResource MenuInputGestureTextMargin}"
                          Text="{TemplateBinding InputGesture, Converter={StaticResource KeyGestureConverter}}"
@@ -203,6 +211,38 @@
         <ControlTemplate>
           <Separator/>
         </ControlTemplate>
+      </Setter>
+    </Style>
+    
+    <Style Selector="^ /template/ Image#PART_ToggleIconImage">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+  </ControlTheme>
+  
+  <ControlTheme x:Key="{x:Type ToggleMenuItem}" TargetType="ToggleMenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+    <Style Selector="^ /template/ Viewbox#PART_ToggleIconPresenter">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="^:checked /template/ Viewbox#PART_ToggleIconPresenter">
+      <Setter Property="Child">
+        <Template>
+          <Path Fill="{Binding $parent[MenuItem].Foreground}"
+                Width="16"
+                Data="{StaticResource CheckMarkPathData}" />
+        </Template>
+      </Setter>
+    </Style>
+  </ControlTheme>
+  <ControlTheme x:Key="{x:Type RadioMenuItem}" TargetType="RadioMenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+    <Style Selector="^ /template/ Viewbox#PART_ToggleIconPresenter">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="^:checked /template/ Viewbox#PART_ToggleIconPresenter">
+      <Setter Property="Child">
+        <Template>
+          <Ellipse Fill="{Binding $parent[MenuItem].Foreground}"
+                   Margin="4" Width="8" Height="8" />
+        </Template>
       </Setter>
     </Style>
   </ControlTheme>

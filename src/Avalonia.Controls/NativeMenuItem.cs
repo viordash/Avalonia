@@ -54,18 +54,22 @@ namespace Avalonia.Controls
             return value;
         }
 
+        /// <inheritdoc cref="MenuItem.IconProperty"/>
         public static readonly StyledProperty<Bitmap?> IconProperty =
             AvaloniaProperty.Register<NativeMenuItem, Bitmap?>(nameof(Icon));
 
+        /// <inheritdoc cref="MenuItem.Icon"/>
         public Bitmap? Icon
         {
             get => GetValue(IconProperty);
             set => SetValue(IconProperty, value);
         }
 
+        /// <inheritdoc cref="MenuItem.HeaderProperty"/>
         public static readonly StyledProperty<string?> HeaderProperty =
             AvaloniaProperty.Register<NativeMenuItem, string?>(nameof(Header));
 
+        /// <inheritdoc cref="MenuItem.Header"/>
         public string? Header
         {
             get => GetValue(HeaderProperty);
@@ -81,9 +85,11 @@ namespace Avalonia.Controls
             set => SetValue(GestureProperty, value);
         }
 
+        /// <inheritdoc cref="ToggleMenuItem.IsCheckedProperty"/>
         public static readonly StyledProperty<bool> IsCheckedProperty =
-            AvaloniaProperty.Register<NativeMenuItem, bool>(nameof(IsChecked));
+            ToggleMenuItem.IsCheckedProperty.AddOwner<NativeMenuItem>();
 
+        /// <inheritdoc cref="ToggleMenuItem.IsChecked"/>
         public bool IsChecked
         {
             get => GetValue(IsCheckedProperty);
@@ -99,14 +105,13 @@ namespace Avalonia.Controls
             set => SetValue(ToggleTypeProperty, value);
         }
 
+        /// <inheritdoc cref="MenuItem.CommandProperty"/>
         public static readonly StyledProperty<ICommand?> CommandProperty =
-            Button.CommandProperty.AddOwner<NativeMenuItem>(new(enableDataValidation: true));
+            MenuItem.CommandProperty.AddOwner<NativeMenuItem>(new(enableDataValidation: true));
 
-        /// <summary>
-        /// Defines the <see cref="CommandParameter"/> property.
-        /// </summary>
+        /// <inheritdoc cref="MenuItem.CommandParameterProperty"/>
         public static readonly StyledProperty<object?> CommandParameterProperty =
-            Button.CommandParameterProperty.AddOwner<NativeMenuItem>();
+            MenuItem.CommandParameterProperty.AddOwner<NativeMenuItem>();
 
         public static readonly StyledProperty<bool> IsEnabledProperty =
            AvaloniaProperty.Register<NativeMenuItem, bool>(nameof(IsEnabled), true);
