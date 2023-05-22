@@ -1,95 +1,133 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Avalonia.Collections.Pooled;
 using Avalonia.Controls.Primitives;
+using Avalonia.LogicalTree;
 using Avalonia.Rendering;
 
 namespace Avalonia.Controls;
 
-internal interface IGroupRadioButton
+internal interface IGroupRadioButton : ILogical
 {
     string? GroupName { get; }
     bool IsChecked { get; set; }
+    void SubscribeOnChecked(Action<IGroupRadioButton> action);
 }
 
 internal class RadioButtonGroupManager
 {
-    public static readonly RadioButtonGroupManager Default = new RadioButtonGroupManager();
-    static readonly ConditionalWeakTable<IRenderRoot, RadioButtonGroupManager> s_registeredVisualRoots
-        = new ConditionalWeakTable<IRenderRoot, RadioButtonGroupManager>();
+    private static readonly RadioButtonGroupManager s_default = new();
+    private static readonly ConditionalWeakTable<IRenderRoot, RadioButtonGroupManager> s_registeredVisualRoots = new();
 
-    readonly Dictionary<string, List<WeakReference<IGroupRadioButton>>> s_registeredGroups
-        = new Dictionary<string, List<WeakReference<IGroupRadioButton>>>();
+    private readonly Dictionary<string, List<WeakReference<IGroupRadioButton>>> _registeredGroups = new();
+    private bool _ignoreCheckedChanges;
 
     public static RadioButtonGroupManager GetOrCreateForRoot(IRenderRoot? root)
     {
         if (root == null)
-            return Default;
+            return s_default;
         return s_registeredVisualRoots.GetValue(root, key => new RadioButtonGroupManager());
     }
 
     public void Add(IGroupRadioButton radioButton)
     {
-        lock (s_registeredGroups)
+        var groupName = radioButton.GroupName;
+        if (groupName is not null)
         {
-            string groupName = radioButton.GroupName!;
-            if (!s_registeredGroups.TryGetValue(groupName, out var group))
+            if (!_registeredGroups.TryGetValue(groupName, out var group))
             {
                 group = new List<WeakReference<IGroupRadioButton>>();
-                s_registeredGroups.Add(groupName, group);
+                _registeredGroups.Add(groupName, group);
             }
+
             group.Add(new WeakReference<IGroupRadioButton>(radioButton));
         }
+
+        radioButton.SubscribeOnChecked(OnCheckedChanged);
     }
 
-    public void Remove(IGroupRadioButton radioButton, string oldGroupName)
+    public void Remove(IGroupRadioButton radioButton, string? oldGroupName)
     {
-        lock (s_registeredGroups)
+        if (!string.IsNullOrEmpty(oldGroupName) && _registeredGroups.TryGetValue(oldGroupName, out var group))
         {
-            if (!string.IsNullOrEmpty(oldGroupName) && s_registeredGroups.TryGetValue(oldGroupName, out var group))
+            int i = 0;
+            while (i < group.Count)
             {
-                int i = 0;
-                while (i < group.Count)
+                if (!group[i].TryGetTarget(out var button) || button == radioButton)
                 {
-                    if (!group[i].TryGetTarget(out var button) || button == radioButton)
-                    {
-                        group.RemoveAt(i);
-                        continue;
-                    }
-                    i++;
+                    group.RemoveAt(i);
+                    continue;
                 }
-                if (group.Count == 0)
-                {
-                    s_registeredGroups.Remove(oldGroupName);
-                }
+
+                i++;
+            }
+
+            if (group.Count == 0)
+            {
+                _registeredGroups.Remove(oldGroupName);
             }
         }
     }
 
-    public void SetChecked(IGroupRadioButton radioButton)
+    public void OnCheckedChanged(IGroupRadioButton radioButton)
     {
-        lock (s_registeredGroups)
+        if (_ignoreCheckedChanges)
         {
-            string groupName = radioButton.GroupName!;
-            if (s_registeredGroups.TryGetValue(groupName, out var group))
+            return;
+        }
+
+        _ignoreCheckedChanges = true;
+        try
+        {
+            if (radioButton.GroupName is { Length: > 0 } groupName)
             {
-                int i = 0;
-                while (i < group.Count)
+                if (_registeredGroups.TryGetValue(groupName, out var group))
                 {
-                    if (!group[i].TryGetTarget(out var current))
+                    var i = 0;
+                    while (i < group.Count)
                     {
-                        group.RemoveAt(i);
-                        continue;
+                        if (!group[i].TryGetTarget(out var current))
+                        {
+                            group.RemoveAt(i);
+                            continue;
+                        }
+
+                        if (current != radioButton && current.IsChecked)
+                            current.IsChecked = false;
+                        i++;
                     }
-                    if (current != radioButton && current.IsChecked)
-                        current.IsChecked = false;
-                    i++;
-                }
-                if (group.Count == 0)
-                {
-                    s_registeredGroups.Remove(groupName);
+
+                    if (group.Count == 0)
+                    {
+                        _registeredGroups.Remove(groupName);
+                    }
+
+                    var parent = radioButton.LogicalParent as IGroupRadioButton;
+                    while (parent is not null && parent.GroupName == groupName)
+                    {
+                        parent.IsChecked = true;
+                        parent = parent.LogicalParent as IGroupRadioButton;
+                    }
                 }
             }
+            else
+            {
+                if (radioButton.LogicalParent is { } parent)
+                {
+                    foreach (var sibling in parent.LogicalChildren)
+                    {
+                        if (sibling != radioButton && sibling is IGroupRadioButton { IsChecked: true } button)
+                        {
+                            button.IsChecked = false;
+                        }
+                    }
+                }
+            }
+        }
+        finally
+        {
+            _ignoreCheckedChanges = false;
         }
     }
 }

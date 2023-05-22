@@ -76,30 +76,34 @@ namespace Avalonia.Controls
             set => SetValue(HeaderProperty, value);
         }
 
+        /// <inheritdoc cref="MenuItem.InputGestureProperty"/>
         public static readonly StyledProperty<KeyGesture?> GestureProperty =
             AvaloniaProperty.Register<NativeMenuItem, KeyGesture?>(nameof(Gesture));
 
+        /// <inheritdoc cref="MenuItem.InputGesture"/>
         public KeyGesture? Gesture
         {
             get => GetValue(GestureProperty);
             set => SetValue(GestureProperty, value);
         }
 
-        /// <inheritdoc cref="ToggleMenuItem.IsCheckedProperty"/>
+        /// <inheritdoc cref="MenuItem.IsCheckedProperty"/>
         public static readonly StyledProperty<bool> IsCheckedProperty =
-            ToggleMenuItem.IsCheckedProperty.AddOwner<NativeMenuItem>();
+            MenuItem.IsCheckedProperty.AddOwner<NativeMenuItem>();
 
-        /// <inheritdoc cref="ToggleMenuItem.IsChecked"/>
+        /// <inheritdoc cref="MenuItem.IsChecked"/>
         public bool IsChecked
         {
             get => GetValue(IsCheckedProperty);
             set => SetValue(IsCheckedProperty, value);
         }
         
-        public static readonly StyledProperty<NativeMenuItemToggleType> ToggleTypeProperty =
-            AvaloniaProperty.Register<NativeMenuItem, NativeMenuItemToggleType>(nameof(ToggleType));
+        /// <inheritdoc cref="MenuItem.ToggleTypeProperty"/>
+        public static readonly StyledProperty<MenuItemToggleType> ToggleTypeProperty =
+            AvaloniaProperty.Register<NativeMenuItem, MenuItemToggleType>(nameof(ToggleType));
 
-        public NativeMenuItemToggleType ToggleType
+        /// <inheritdoc cref="MenuItem.ToggleType"/>
+        public MenuItemToggleType ToggleType
         {
             get => GetValue(ToggleTypeProperty);
             set => SetValue(ToggleTypeProperty, value);
@@ -116,6 +120,7 @@ namespace Avalonia.Controls
         public static readonly StyledProperty<bool> IsEnabledProperty =
            AvaloniaProperty.Register<NativeMenuItem, bool>(nameof(IsEnabled), true);
 
+        /// <inheritdoc cref="MenuItem.IsEnabled"/>
         public bool IsEnabled
         {
             get => GetValue(IsEnabledProperty);
@@ -129,16 +134,14 @@ namespace Avalonia.Controls
 
         public bool HasClickHandlers => Click != null;
 
+        /// <inheritdoc cref="MenuItem.Command"/>
         public ICommand? Command
         {
             get => GetValue(CommandProperty);
             set => SetValue(CommandProperty, value);
         }
 
-        /// <summary>
-        /// Gets or sets the parameter to pass to the <see cref="Command"/> property of a
-        /// <see cref="NativeMenuItem"/>.
-        /// </summary>
+        /// <inheritdoc cref="MenuItem.CommandParameter"/>
         public object? CommandParameter
         {
             get { return GetValue(CommandParameterProperty); }
@@ -179,12 +182,5 @@ namespace Avalonia.Controls
                 CanExecuteChanged();
             }
         }
-    }
-    
-    public enum NativeMenuItemToggleType
-    {
-        None,
-        CheckBox,
-        Radio
     }
 }

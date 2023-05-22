@@ -52,7 +52,7 @@ namespace IntegrationTestApp
                     {
                         Header = (string)tabItem.Header!,
                         IsChecked = tabItem.IsSelected,
-                        ToggleType = NativeMenuItemToggleType.Radio,
+                        ToggleType = MenuItemToggleType.Radio,
                     };
 
                     menuItem.Click += (s, e) => tabItem.IsSelected = true;

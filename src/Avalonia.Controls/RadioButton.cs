@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls.Automation.Peers;
@@ -19,6 +21,7 @@ namespace Avalonia.Controls
             AvaloniaProperty.Register<RadioButton, string?>(nameof(GroupName));
 
         private RadioButtonGroupManager? _groupManager;
+        private Action<IGroupRadioButton>? _radioGroupOnChangedHandler;
 
         /// <summary>
         /// Gets or sets the name that specifies which RadioButton controls are mutually exclusive.
@@ -35,6 +38,11 @@ namespace Avalonia.Controls
             set => SetCurrentValue(IsCheckedProperty, value);
         }
 
+        void IGroupRadioButton.SubscribeOnChecked(Action<IGroupRadioButton> action)
+        {
+            _radioGroupOnChangedHandler = action;
+        }
+
         protected override void Toggle()
         {
             if (!IsChecked.GetValueOrDefault())
@@ -45,14 +53,9 @@ namespace Avalonia.Controls
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            if (!string.IsNullOrEmpty(GroupName))
-            {
-                _groupManager?.Remove(this, GroupName);
-
-                _groupManager = RadioButtonGroupManager.GetOrCreateForRoot(e.Root);
-
-                _groupManager.Add(this);
-            }
+            _groupManager?.Remove(this, GroupName);
+            _groupManager = RadioButtonGroupManager.GetOrCreateForRoot(e.Root);
+            _groupManager.Add(this);
             base.OnAttachedToVisualTree(e);
         }
 
@@ -60,10 +63,8 @@ namespace Avalonia.Controls
         {
             base.OnDetachedFromVisualTree(e);
 
-            if (!string.IsNullOrEmpty(GroupName))
-            {
-                _groupManager?.Remove(this, GroupName);
-            }
+            _groupManager?.Remove(this, GroupName);
+            _radioGroupOnChangedHandler = null;
         }
 
         protected override AutomationPeer OnCreateAutomationPeer()
@@ -94,41 +95,16 @@ namespace Avalonia.Controls
             }
             if (!string.IsNullOrEmpty(newGroupName))
             {
-                if (_groupManager == null)
-                {
-                    _groupManager = RadioButtonGroupManager.GetOrCreateForRoot(this.GetVisualRoot());
-                }
+                _groupManager ??= RadioButtonGroupManager.GetOrCreateForRoot(this.GetVisualRoot());
                 _groupManager.Add(this);
             }
         }
 
         private new void IsCheckedChanged(bool? value)
         {
-            var groupName = GroupName;
-            if (string.IsNullOrEmpty(groupName))
+            if (value.GetValueOrDefault() && _groupManager != null)
             {
-                var parent = this.GetVisualParent();
-
-                if (value.GetValueOrDefault() && parent != null)
-                {
-                    var siblings = parent
-                        .GetVisualChildren()
-                        .OfType<RadioButton>()
-                        .Where(x => x != this && string.IsNullOrEmpty(x.GroupName));
-
-                    foreach (var sibling in siblings)
-                    {
-                        if (sibling.IsChecked.GetValueOrDefault())
-                            sibling.SetCurrentValue(IsCheckedProperty, false);
-                    }
-                }
-            }
-            else
-            {
-                if (value.GetValueOrDefault() && _groupManager != null)
-                {
-                    _groupManager.SetChecked(this);
-                }
+                _radioGroupOnChangedHandler?.Invoke(this);
             }
         }
     }

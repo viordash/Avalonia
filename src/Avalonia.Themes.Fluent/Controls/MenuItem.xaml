@@ -217,13 +217,11 @@
     <Style Selector="^ /template/ Image#PART_ToggleIconImage">
       <Setter Property="IsVisible" Value="True" />
     </Style>
-  </ControlTheme>
-  
-  <ControlTheme x:Key="{x:Type ToggleMenuItem}" TargetType="ToggleMenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-    <Style Selector="^ /template/ Viewbox#PART_ToggleIconPresenter">
+    
+    <Style Selector="^:toggle /template/ Viewbox#PART_ToggleIconPresenter, ^:radio /template/ Viewbox#PART_ToggleIconPresenter">
       <Setter Property="IsVisible" Value="True" />
     </Style>
-    <Style Selector="^:checked /template/ Viewbox#PART_ToggleIconPresenter">
+    <Style Selector="^:checked:toggle /template/ Viewbox#PART_ToggleIconPresenter">
       <Setter Property="Child">
         <Template>
           <Path Fill="{Binding $parent[MenuItem].Foreground}"
@@ -232,12 +230,7 @@
         </Template>
       </Setter>
     </Style>
-  </ControlTheme>
-  <ControlTheme x:Key="{x:Type RadioMenuItem}" TargetType="RadioMenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-    <Style Selector="^ /template/ Viewbox#PART_ToggleIconPresenter">
-      <Setter Property="IsVisible" Value="True" />
-    </Style>
-    <Style Selector="^:checked /template/ Viewbox#PART_ToggleIconPresenter">
+    <Style Selector="^:checked:radio /template/ Viewbox#PART_ToggleIconPresenter">
       <Setter Property="Child">
         <Template>
           <Ellipse Fill="{Binding $parent[MenuItem].Foreground}"
