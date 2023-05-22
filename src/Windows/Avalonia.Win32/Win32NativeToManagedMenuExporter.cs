@@ -14,15 +14,15 @@ namespace Avalonia.Win32
             _nativeMenu = nativeMenu;
         }
 
-        private static AvaloniaList<MenuItem> Populate(NativeMenu nativeMenu)
+        private static AvaloniaList<object> Populate(NativeMenu nativeMenu)
         {
-            var result = new AvaloniaList<MenuItem>();
+            var result = new AvaloniaList<object>();
             
             foreach (var menuItem in nativeMenu.Items)
             {
                 if (menuItem is NativeMenuItemSeparator)
                 {
-                    result.Add(new MenuItem { Header = "-" });
+                    result.Add(new Separator());
                 }
                 else if (menuItem is NativeMenuItem item)
                 {
@@ -53,7 +53,7 @@ namespace Avalonia.Win32
             return result;
         }
 
-        public AvaloniaList<MenuItem>? GetMenu()
+        public AvaloniaList<object>? GetMenu()
         {
             if (_nativeMenu != null)
             {
