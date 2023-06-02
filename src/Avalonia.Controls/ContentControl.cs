@@ -4,6 +4,7 @@ using Avalonia.Controls.Mixins;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
+using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Metadata;
@@ -43,6 +44,19 @@ namespace Avalonia.Controls
         static ContentControl()
         {
             ContentProperty.Changed.AddClassHandler<ContentControl>((x, e) => x.ContentChanged(e));
+            TemplateProperty.OverrideDefaultValue<ContentControl>(new FuncControlTemplate((_, ns) => new ContentPresenter
+            {
+                Name = "PART_ContentPresenter",
+                [~BackgroundProperty] = new TemplateBinding(BackgroundProperty),
+                [~BorderBrushProperty] = new TemplateBinding(BorderBrushProperty),
+                [~BorderThicknessProperty] = new TemplateBinding(BorderThicknessProperty),
+                [~CornerRadiusProperty] = new TemplateBinding(CornerRadiusProperty),
+                [~ContentTemplateProperty] = new TemplateBinding(ContentTemplateProperty),
+                [~ContentProperty] = new TemplateBinding(ContentProperty),
+                [~PaddingProperty] = new TemplateBinding(PaddingProperty),
+                [~VerticalContentAlignmentProperty] = new TemplateBinding(VerticalContentAlignmentProperty),
+                [~HorizontalContentAlignmentProperty] = new TemplateBinding(HorizontalContentAlignmentProperty)
+            }.RegisterInNameScope(ns)));
         }
 
         /// <summary>
