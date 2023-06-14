@@ -8,7 +8,7 @@
              x:DataType="viewModels:MainWindowViewModel">
   <Grid>
     <Grid.Styles>
-      <Media Query="width >= 600">
+      <Media Query="width >= 600 and height &lt;= 550 and orientation:portrait">
         <Style  Selector="TextBlock#MinWidth">
           <Setter Property="Foreground"
                   Value="Red" />
