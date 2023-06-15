@@ -62,9 +62,9 @@ namespace Avalonia.Markup.Xaml.XamlIl.CompilerExtensions.Transformers
                             result = new XamlIlHeightQuery(result, height);
                             break;
                         case MediaQueryGrammar.OrSyntax or:
-                            if (results == null) 
+                            if (results == null)
                                 results = new XamlIlOrQueryNode(node, queryType);
-                            if(andNode != null && result == initialNode)
+                            if (andNode != null && result == initialNode)
                                 throw new XamlParseException($"Previously opened And node is not closed.", node);
                             results.Add(andNode ?? result);
                             result = initialNode;
@@ -80,10 +80,9 @@ namespace Avalonia.Markup.Xaml.XamlIl.CompilerExtensions.Transformers
                             throw new XamlParseException($"Unsupported query grammar '{i.GetType()}'.", node);
                     }
 
-                    if(andNode != null && result != initialNode)
+                    if (andNode != null && result != initialNode)
                     {
                         andNode.Add(result);
-                        result = andNode;
                     }
                 }
 

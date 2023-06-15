@@ -51,8 +51,13 @@ namespace Avalonia.Styling
 
         internal override SelectorMatch Evaluate(StyledElement control, IStyle? parent, bool subscribe)
         {
-            var activators = new OrActivatorBuilder();
-            var neverThisInstance = false;
+            if (!(control is Visual visual))
+            {
+                return SelectorMatch.NeverThisType;
+            }
+
+            var activators = new AndQueryActivatorBuilder(visual);
+            var alwaysThisInstance = false;
 
             var count = _queries.Count;
 
@@ -62,12 +67,12 @@ namespace Avalonia.Styling
 
                 switch (match.Result)
                 {
-                    case SelectorMatchResult.AlwaysThisType:
                     case SelectorMatchResult.AlwaysThisInstance:
-                        return match;
-                    case SelectorMatchResult.NeverThisInstance:
-                        neverThisInstance = true;
+                        alwaysThisInstance = true;
                         break;
+                    case SelectorMatchResult.NeverThisInstance:
+                    case SelectorMatchResult.NeverThisType:
+                        return match;
                     case SelectorMatchResult.Sometimes:
                         activators.Add(match.Activator!);
                         break;
@@ -78,13 +83,13 @@ namespace Avalonia.Styling
             {
                 return new SelectorMatch(activators.Get());
             }
-            else if (neverThisInstance)
+            else if (alwaysThisInstance)
             {
-                return SelectorMatch.NeverThisInstance;
+                return SelectorMatch.AlwaysThisInstance;
             }
             else
             {
-                return SelectorMatch.NeverThisType;
+                return SelectorMatch.AlwaysThisType;
             }
         }
 
