@@ -8,8 +8,14 @@
              x:DataType="viewModels:MainWindowViewModel">
   <Grid>
     <Grid.Styles>
-      <Media Query="width >= 600 and height &lt;= 550 and orientation:portrait">
+      <Media Query="width >= 600">
         <Style  Selector="TextBlock#MinWidth">
+          <Setter Property="Foreground"
+                  Value="Red" />
+        </Style>
+      </Media>
+      <Media Query="width >= 600 and height &lt;= 550 and orientation:portrait">
+        <Style  Selector="TextBlock#Multi">
           <Setter Property="Foreground"
                   Value="Red" />
         </Style>
@@ -78,6 +84,7 @@
     <StackPanel Spacing="10">
       <TextBlock Name="MinWidth" Classes="h2" Text="width >= 600" />
       <TextBlock Name="MaxWidth" Classes="h2" Text="width &lt;= 800" />
+      <TextBlock Name="Multi" Classes="h2" Text="width >= 600 and height &lt;= 550 and orientation:portrait" />
       <TextBlock Name="MinHeight" Classes="h2" Text="height >= 600" />
       <TextBlock Name="MaxHeight" Classes="h2" Text="height &lt;= 800" />
       <TextBlock Name="Landscape" Classes="h2" Text="orientation:landscape" />
