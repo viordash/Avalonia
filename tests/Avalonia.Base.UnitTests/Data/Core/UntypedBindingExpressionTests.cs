@@ -1,26 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Data;
-using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
-using Avalonia.Markup.Parsers;
 using Avalonia.UnitTests;
-using Moq;
 using Xunit;
 
 namespace Avalonia.Base.UnitTests.Data.Core
 {
-    public class BindingExpressionTests : IClassFixture<InvariantCultureFixture>
+    public class UntypedBindingExpressionTests : IClassFixture<InvariantCultureFixture>
     {
         [Fact]
-        public async Task Should_Get_Simple_Property_Value()
+        public async Task Should_Get_Source_Value()
         {
-            var data = new Class1 { StringValue = "foo" };
-            var target = UntypedBindingExpression.Create(data, o => o.StringValue, typeof(string));
+            var data = "foo";
+            var target = UntypedBindingExpression.Create(data, o => o, typeof(string));
             var result = await target.Take(1);
 
             Assert.Equal("foo", result);
@@ -28,34 +21,8 @@ namespace Avalonia.Base.UnitTests.Data.Core
             GC.KeepAlive(data);
         }
 
-        ////[Fact]
-        ////public void Should_Set_Simple_Property_Value()
-        ////{
-        ////    var data = new Class1 { StringValue = "foo" };
-        ////    var target = new BindingExpression(UntypedBindingExpression.Create(data, o => o.StringValue), typeof(string));
-
-        ////    target.OnNext("bar");
-
-        ////    Assert.Equal("bar", data.StringValue);
-
-        ////    GC.KeepAlive(data);
-        ////}
-
-        ////[Fact]
-        ////public void Should_Set_Indexed_Value()
-        ////{
-        ////    var data = new { Foo = new[] { "foo" } };
-        ////    var target = new BindingExpression(UntypedBindingExpression.Create(data, o => o.Foo[0]), typeof(string));
-
-        ////    target.OnNext("bar");
-
-        ////    Assert.Equal("bar", data.Foo[0]);
-
-        ////    GC.KeepAlive(data);
-        ////}
-
         [Fact]
-        public async Task Should_Convert_Get_String_To_Double()
+        public async Task Should_Convert_String_To_Double()
         {
             var data = new Class1 { StringValue = $"{5.6}" };
             var target = UntypedBindingExpression.Create(data, o => o.StringValue, typeof(double));
@@ -92,7 +59,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////}
 
         [Fact]
-        public async Task Should_Convert_Get_Double_To_String()
+        public async Task Should_Convert_Double_To_String()
         {
             var data = new Class1 { DoubleValue = 5.6 };
             var target = UntypedBindingExpression.Create(data, o => o.DoubleValue, typeof(string));

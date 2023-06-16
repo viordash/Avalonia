@@ -154,9 +154,12 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         if (_sourceObservable is not null)
             _sourceSubscription = _sourceObservable.Subscribe(OnSourceChanged);
         
-        if (_nodes.Length > 0  && _source?.TryGetTarget(out var source) == true)
+        if (_source?.TryGetTarget(out var source) == true)
         {
-            _nodes[0].SetSource(source);
+            if (_nodes.Length > 0)
+                _nodes[0].SetSource(source);
+            else
+                _observer.OnNext(source);
         }
         else
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -29,8 +30,20 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
     protected override Expression VisitBinary(BinaryExpression node)
     {
         var result = base.VisitBinary(node);
-        if (node.Left == _head)
-            _head = node;
+
+        EnsureHead(node.Left);
+        _head = node;
+
+        switch (node.NodeType)
+        {
+            case ExpressionType.ArrayIndex:
+                var index = GetValue<int>(node.Right);
+                _nodes.Add(new ListIndexerNode(index));
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported binary expresion: {node.NodeType}.");
+        }
+
         return result;
     }
 
@@ -38,13 +51,19 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
     {
         var result = base.VisitMember(node);
 
-        if (node.Expression is not null &&
-            node.Expression == _head &&
-            node.Expression.Type.IsValueType == false &&
-            node.Member.MemberType == MemberTypes.Property)
+        EnsureHead(node.Expression);
+        _head = node;
+
+        if (node.Expression is not null)
         {
-            _nodes.Add(new PropertyAccessorNode(node.Member.Name));
-            _head = node;
+            switch (node.Member.MemberType)
+            {
+                case MemberTypes.Property:
+                    _nodes.Add(new PropertyAccessorNode(node.Member.Name));
+                    break;
+                default:
+                    throw new NotSupportedException($"Unsupported MemberExpression: {node}.");
+            }
         }
 
         return result;
@@ -55,15 +74,26 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         var result = base.VisitMethodCall(node);
         var method = node.Method;
 
-        if (method.Name == IndexerGetterName &&
-            method.DeclaringType == typeof(AvaloniaObject) &&
-            method.GetParameters() is { } parameters &&
-            parameters.Length == 1 &&
-            parameters[0].ParameterType == typeof(AvaloniaProperty) &&
-            typeof(AvaloniaProperty).IsAssignableFrom(node.Arguments[0].Type))
+        EnsureHead(node.Object);
+
+        if (method.Name == IndexerGetterName)
         {
-            var property = GetValue<AvaloniaProperty>(node.Arguments[0]);
-            _nodes.Add(new AvaloniaPropertyAccessorNode(property));
+            if (method.DeclaringType == typeof(AvaloniaObject) &&
+                method.GetParameters() is { } parameters &&
+                parameters.Length == 1 &&
+                parameters[0].ParameterType == typeof(AvaloniaProperty) &&
+                typeof(AvaloniaProperty).IsAssignableFrom(node.Arguments[0].Type))
+            {
+                var property = GetValue<AvaloniaProperty>(node.Arguments[0]);
+                _nodes.Add(new AvaloniaPropertyAccessorNode(property));
+            }
+            else if (typeof(IList).IsAssignableFrom(method.DeclaringType) &&
+                     node.Arguments.Count == 1 &&
+                     node.Arguments[0].Type == typeof(int))
+            {
+                var index = GetValue<int>(node.Arguments[0]);
+                _nodes.Add(new ListIndexerNode(index));
+            }
         }
 
         return result;
@@ -84,15 +114,16 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         return result;
     }
 
+    private void EnsureHead(Expression? e)
+    {
+        if (e != _head)
+            throw new NotSupportedException($"Unable to parse expression: {e}");
+    }
+
     private static T GetValue<T>(Expression expr)
     {
-        try
-        {
-            return Expression.Lambda<Func<T>>(expr).Compile(preferInterpretation: true)();
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new ExpressionParseException(0, "Unable to parse indexer value.", ex);
-        }
+        if (expr is ConstantExpression constant)
+            return (T)constant.Value!;
+        return Expression.Lambda<Func<T>>(expr).Compile(preferInterpretation: true)();
     }
 }

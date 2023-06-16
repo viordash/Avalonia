@@ -40,6 +40,19 @@ namespace Avalonia.Base.UnitTests.Data.Core
         }
 
         [Fact]
+        public void Should_Set_Indexed_Value()
+        {
+            var data = new { Foo = new[] { "foo" } };
+            var target = UntypedBindingExpression.Create(data, o => o.Foo[0], typeof(object));
+
+            target.SetValue("bar");
+
+            Assert.Equal("bar", data.Foo[0]);
+
+            GC.KeepAlive(data);
+        }
+
+        [Fact]
         public void Should_Set_Value_On_Simple_Property_Chain()
         {
             var data = new Person { Pet = new Dog { Name = "Fido" } };
