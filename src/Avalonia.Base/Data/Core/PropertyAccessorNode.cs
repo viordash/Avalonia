@@ -28,7 +28,6 @@ internal class PropertyAccessorNode : ExpressionNode
         {
             _accessor = accessor;
             _accessor.Subscribe(_onValueChanged);
-            SetValue(_accessor.Value);
         }
     }
 

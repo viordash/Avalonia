@@ -41,16 +41,10 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
 
     public void OnNodeValueChanged(int nodeIndex, object? value)
     {
-        var source = value;
-
-        for (var i = nodeIndex + 1; i < _nodes.Length; i++)
-        {
-            var node = _nodes[i];
-            node.SetSource(value);
-            source = node.Value;
-        }
-
-        PublishValue();
+        if (nodeIndex == _nodes.Length - 1)
+            PublishValue();
+        else
+            _nodes[nodeIndex + 1].SetSource(value);
     }
 
     void IDisposable.Dispose()

@@ -194,7 +194,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////public void Should_Trigger_PropertyChanged_On_Null_Or_Empty_String()
         ////{
         ////    var data = new Class1 { Bar = "foo" };
-        ////    var target = UntypedBindingExpression.Create(data, o => o.Bar);
+        ////    var target = UntypedBindingExpression.Create(data, o => o.Bar, typeof(object));
         ////    var result = new List<object>();
 
         ////    var sub = target.Subscribe(x => result.Add(x));
@@ -223,28 +223,28 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    GC.KeepAlive(data);
         ////}
 
-        ////[Fact]
-        ////public void Should_Track_End_Of_Property_Chain_Changing()
-        ////{
-        ////    var data = new Class1 { Next = new Class2 { Bar = "bar" } };
-        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
-        ////    var result = new List<object>();
+        [Fact]
+        public void Should_Track_End_Of_Property_Chain_Changing()
+        {
+            var data = new Class1 { Next = new Class2 { Bar = "bar" } };
+            var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar, typeof(object));
+            var result = new List<object>();
 
-        ////    var sub = target.Subscribe(x => result.Add(x));
-        ////    ((Class2)data.Next).Bar = "baz";
-        ////    ((Class2)data.Next).Bar = null;
+            var sub = target.Subscribe(x => result.Add(x));
+            ((Class2)data.Next).Bar = "baz";
+            ((Class2)data.Next).Bar = null;
 
-        ////    Assert.Equal(new[] { "bar", "baz", null }, result);
+            Assert.Equal(new[] { "bar", "baz", null }, result);
 
-        ////    sub.Dispose();
-        ////    // Forces WeakEvent compact
-        ////    Dispatcher.UIThread.RunJobs();
+            sub.Dispose();
+            // Forces WeakEvent compact
+            Dispatcher.UIThread.RunJobs();
 
-        ////    Assert.Equal(0, data.PropertyChangedSubscriptionCount);
-        ////    Assert.Equal(0, data.Next.PropertyChangedSubscriptionCount);
+            Assert.Equal(0, data.PropertyChangedSubscriptionCount);
+            Assert.Equal(0, data.Next.PropertyChangedSubscriptionCount);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
         ////[Fact]
         ////public void Should_Track_Property_Chain_Changing()
