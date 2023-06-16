@@ -34,6 +34,10 @@ internal class PropertyAccessorNode : ExpressionNode
             _accessor = accessor;
             _accessor.Subscribe(_onValueChanged);
         }
+        else
+        {
+            SetValue(null);
+        }
     }
 
     private void OnValueChanged(object? newValue)

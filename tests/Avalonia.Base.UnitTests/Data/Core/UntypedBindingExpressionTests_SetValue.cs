@@ -64,7 +64,6 @@ namespace Avalonia.Base.UnitTests.Data.Core
                 data.Foo = null;
                 Assert.False(target.SetValue("foo"));
             }
-
         }
 
         /// <summary>

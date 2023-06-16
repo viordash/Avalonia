@@ -188,6 +188,7 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
 
     private void OnSourceChanged(object? source)
     {
-
+        if (_nodes.Length > 0)
+            _nodes[0].SetSource(source);
     }
 }

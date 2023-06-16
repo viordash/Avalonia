@@ -373,24 +373,25 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    GC.KeepAlive(data);
         ////}
 
-        ////[Fact]
-        ////public void Should_Track_Property_Value_From_Observable_Root()
-        ////{
-        ////    var scheduler = new TestScheduler();
-        ////    var source = scheduler.CreateColdObservable(
-        ////        OnNext(1, new Class1 { Foo = "foo" }),
-        ////        OnNext(2, new Class1 { Foo = "bar" }));
-        ////    var target = UntypedBindingExpression.Create(source, o => o.Foo);
-        ////    var result = new List<object>();
+        [Fact]
+        public void Should_Track_Property_Value_From_Observable_Root()
+        {
+            var scheduler = new TestScheduler();
+            var source = scheduler.CreateColdObservable(
+                OnNext(1, new Class1 { Foo = "foo" }),
+                OnNext(2, new Class1 { Foo = "bar" }));
+            var target = UntypedBindingExpression.Create(source, o => o.Foo, typeof(object));
+            var result = new List<object>();
 
-        ////    using (target.Subscribe(x => result.Add(x)))
-        ////    {
-        ////        scheduler.Start();
-        ////    }
+            using (target.Subscribe(x => result.Add(x)))
+            {
+                result.Clear();
+                scheduler.Start();
+            }
 
-        ////    Assert.Equal(new[] { "foo", "bar" }, result);
-        ////    Assert.All(source.Subscriptions, x => Assert.NotEqual(Subscription.Infinite, x.Unsubscribe));
-        ////}
+            Assert.Equal(new[] { "foo", "bar" }, result);
+            Assert.All(source.Subscriptions, x => Assert.NotEqual(Subscription.Infinite, x.Unsubscribe));
+        }
 
         ////[Fact]
         ////public void Subscribing_Multiple_Times_Should_Return_Values_To_All()
@@ -433,38 +434,6 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    Dispatcher.UIThread.RunJobs();
 
         ////    Assert.Equal(0, data.PropertyChangedSubscriptionCount);
-
-        ////    GC.KeepAlive(data);
-        ////}
-
-        ////[Fact]
-        ////public void SetValue_Should_Set_Simple_Property_Value()
-        ////{
-        ////    var data = new Class1 { Foo = "foo" };
-        ////    var target = UntypedBindingExpression.Create(data, o => o.Foo);
-
-        ////    using (target.Subscribe(_ => { }))
-        ////    {
-        ////        Assert.True(target.SetValue("bar"));
-        ////    }
-
-        ////    Assert.Equal("bar", data.Foo);
-
-        ////    GC.KeepAlive(data);
-        ////}
-
-        ////[Fact]
-        ////public void SetValue_Should_Set_Property_At_The_End_Of_Chain()
-        ////{
-        ////    var data = new Class1 { Next = new Class2 { Bar = "bar" } };
-        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
-
-        ////    using (target.Subscribe(_ => { }))
-        ////    {
-        ////        Assert.True(target.SetValue("baz"));
-        ////    }
-
-        ////    Assert.Equal("baz", ((Class2)data.Next).Bar);
 
         ////    GC.KeepAlive(data);
         ////}
@@ -730,9 +699,9 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////{
         ////}
 
-        ////private static Recorded<Notification<T>> OnNext<T>(long time, T value)
-        ////{
-        ////    return new Recorded<Notification<T>>(time, Notification.CreateOnNext<T>(value));
-        ////}
+        private static Recorded<Notification<T>> OnNext<T>(long time, T value)
+        {
+            return new Recorded<Notification<T>>(time, Notification.CreateOnNext<T>(value));
+        }
     }
 }
