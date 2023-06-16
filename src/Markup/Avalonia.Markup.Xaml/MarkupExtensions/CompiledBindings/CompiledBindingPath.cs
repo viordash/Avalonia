@@ -6,7 +6,6 @@ using Avalonia.Controls;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Parsers;
-using Avalonia.Markup.Parsers.Nodes;
 
 namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
 {
@@ -26,54 +25,55 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimmingMessages.CompiledBindingSafeSupressWarningMessage)]
         internal ExpressionNode BuildExpression(bool enableValidation)
         {
-            ExpressionNode? pathRoot = null;
-            ExpressionNode? path = null;
-            foreach (var element in _elements)
-            {
-                ExpressionNode? node;
-                switch (element)
-                {
-                    case NotExpressionPathElement:
-                        node = new LogicalNotNode();
-                        break;
-                    case PropertyElement prop:
-                        node = new PropertyAccessorNode(prop.Property.Name, enableValidation, new PropertyInfoAccessorPlugin(prop.Property, prop.AccessorFactory));
-                        break;
-                    case MethodAsCommandElement methodAsCommand:
-                        node = new PropertyAccessorNode(methodAsCommand.MethodName, enableValidation, new CommandAccessorPlugin(methodAsCommand.ExecuteMethod, methodAsCommand.CanExecuteMethod, methodAsCommand.DependsOnProperties));
-                        break;
-                    case MethodAsDelegateElement methodAsDelegate:
-                        node = new PropertyAccessorNode(methodAsDelegate.Method.Name, enableValidation, new MethodAccessorPlugin(methodAsDelegate.Method, methodAsDelegate.DelegateType));
-                        break;
-                    case ArrayElementPathElement arr:
-                        node = new PropertyAccessorNode(CommonPropertyNames.IndexerName, enableValidation, new ArrayElementPlugin(arr.Indices, arr.ElementType));
-                        break;
-                    case VisualAncestorPathElement visualAncestor:
-                        node = new FindVisualAncestorNode(visualAncestor.AncestorType, visualAncestor.Level);
-                        break;
-                    case AncestorPathElement ancestor:
-                        node = new FindAncestorNode(ancestor.AncestorType, ancestor.Level);
-                        break;
-                    case SelfPathElement:
-                        node = new SelfNode();
-                        break;
-                    case ElementNameElement name:
-                        node = new ElementNameNode(name.NameScope, name.Name);
-                        break;
-                    case IStronglyTypedStreamElement stream:
-                        node = new StreamNode(stream.CreatePlugin());
-                        break;
-                    case ITypeCastElement typeCast:
-                        node = new StrongTypeCastNode(typeCast.Type, typeCast.Cast);
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unknown binding path element type {element.GetType().FullName}");
-                }
+            throw new NotImplementedException();
+            ////ExpressionNode? pathRoot = null;
+            ////ExpressionNode? path = null;
+            ////foreach (var element in _elements)
+            ////{
+            ////    ExpressionNode? node;
+            ////    switch (element)
+            ////    {
+            ////        case NotExpressionPathElement:
+            ////            node = new LogicalNotNode();
+            ////            break;
+            ////        case PropertyElement prop:
+            ////            node = new PropertyAccessorNode(prop.Property.Name, enableValidation, new PropertyInfoAccessorPlugin(prop.Property, prop.AccessorFactory));
+            ////            break;
+            ////        case MethodAsCommandElement methodAsCommand:
+            ////            node = new PropertyAccessorNode(methodAsCommand.MethodName, enableValidation, new CommandAccessorPlugin(methodAsCommand.ExecuteMethod, methodAsCommand.CanExecuteMethod, methodAsCommand.DependsOnProperties));
+            ////            break;
+            ////        case MethodAsDelegateElement methodAsDelegate:
+            ////            node = new PropertyAccessorNode(methodAsDelegate.Method.Name, enableValidation, new MethodAccessorPlugin(methodAsDelegate.Method, methodAsDelegate.DelegateType));
+            ////            break;
+            ////        case ArrayElementPathElement arr:
+            ////            node = new PropertyAccessorNode(CommonPropertyNames.IndexerName, enableValidation, new ArrayElementPlugin(arr.Indices, arr.ElementType));
+            ////            break;
+            ////        case VisualAncestorPathElement visualAncestor:
+            ////            node = new FindVisualAncestorNode(visualAncestor.AncestorType, visualAncestor.Level);
+            ////            break;
+            ////        case AncestorPathElement ancestor:
+            ////            node = new FindAncestorNode(ancestor.AncestorType, ancestor.Level);
+            ////            break;
+            ////        case SelfPathElement:
+            ////            node = new SelfNode();
+            ////            break;
+            ////        case ElementNameElement name:
+            ////            node = new ElementNameNode(name.NameScope, name.Name);
+            ////            break;
+            ////        case IStronglyTypedStreamElement stream:
+            ////            node = new StreamNode(stream.CreatePlugin());
+            ////            break;
+            ////        case ITypeCastElement typeCast:
+            ////            node = new StrongTypeCastNode(typeCast.Type, typeCast.Cast);
+            ////            break;
+            ////        default:
+            ////            throw new InvalidOperationException($"Unknown binding path element type {element.GetType().FullName}");
+            ////    }
 
-                path = pathRoot is null ? (pathRoot = node) : path!.Next = node;
-            }
+            ////    path = pathRoot is null ? (pathRoot = node) : path!.Next = node;
+            ////}
 
-            return pathRoot ?? new EmptyExpressionNode();
+            ////return pathRoot ?? new EmptyExpressionNode();
         }
 
         internal IEnumerable<ICompiledBindingPathElement> Elements => _elements;

@@ -11,18 +11,18 @@ namespace Avalonia.Data.Core.Plugins
         /// An ordered collection of property accessor plugins that can be used to customize
         /// the reading and subscription of property values on a type.
         /// </summary>
-        public static IList<IPropertyAccessorPlugin> PropertyAccessors => ExpressionObserver.PropertyAccessors;
+        public static IList<IPropertyAccessorPlugin> PropertyAccessors { get; } = new List<IPropertyAccessorPlugin>();
 
         /// <summary>
         /// An ordered collection of validation checker plugins that can be used to customize
         /// the validation of view model and model data.
         /// </summary>
-        public static IList<IDataValidationPlugin> DataValidators => ExpressionObserver.DataValidators;
+        public static IList<IDataValidationPlugin> DataValidators { get; } = new List<IDataValidationPlugin>();
 
         /// <summary>
         /// An ordered collection of stream plugins that can be used to customize the behavior
         /// of the '^' stream binding operator.
         /// </summary>
-        public static IList<IStreamPlugin> StreamHandlers => ExpressionObserver.StreamHandlers;
+        public static IList<IStreamPlugin> StreamHandlers { get; } = new List<IStreamPlugin>();
     }
 }

@@ -35,41 +35,41 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
             };
         }
 
-        private protected override ExpressionObserver CreateExpressionObserver(AvaloniaObject target, AvaloniaProperty? targetProperty, object? anchor, bool enableDataValidation)
-        {
-            if (Source != null)
-            {
-                return CreateSourceObserver(
-                    Source,
-                    Path.BuildExpression(enableDataValidation));
-            }
+        ////private protected override ExpressionObserver CreateExpressionObserver(AvaloniaObject target, AvaloniaProperty? targetProperty, object? anchor, bool enableDataValidation)
+        ////{
+        ////    if (Source != null)
+        ////    {
+        ////        return CreateSourceObserver(
+        ////            Source,
+        ////            Path.BuildExpression(enableDataValidation));
+        ////    }
 
-            if (Path.RawSource != null)
-            {
-                return CreateSourceObserver(
-                    Path.RawSource,
-                    Path.BuildExpression(enableDataValidation));
-            }
+        ////    if (Path.RawSource != null)
+        ////    {
+        ////        return CreateSourceObserver(
+        ////            Path.RawSource,
+        ////            Path.BuildExpression(enableDataValidation));
+        ////    }
 
-            if (Path.SourceMode == SourceMode.Data)
-            {
-                return CreateDataContextObserver(
-                    target,
-                    Path.BuildExpression(enableDataValidation),
-                    targetProperty == StyledElement.DataContextProperty,
-                    anchor);
-            }
-            else
-            {
-                var styledElement = target as StyledElement
-                    ?? anchor as StyledElement
-                    ?? throw new ArgumentException($"Cannot find a valid {nameof(StyledElement)} to use as the binding source.");
+        ////    if (Path.SourceMode == SourceMode.Data)
+        ////    {
+        ////        return CreateDataContextObserver(
+        ////            target,
+        ////            Path.BuildExpression(enableDataValidation),
+        ////            targetProperty == StyledElement.DataContextProperty,
+        ////            anchor);
+        ////    }
+        ////    else
+        ////    {
+        ////        var styledElement = target as StyledElement
+        ////            ?? anchor as StyledElement
+        ////            ?? throw new ArgumentException($"Cannot find a valid {nameof(StyledElement)} to use as the binding source.");
 
-                return CreateSourceObserver(
-                    styledElement,
-                    Path.BuildExpression(enableDataValidation));
-            }
-        }
+        ////        return CreateSourceObserver(
+        ////            styledElement,
+        ////            Path.BuildExpression(enableDataValidation));
+        ////    }
+        ////}
 
         [ConstructorArgument("path")]
         public CompiledBindingPath Path { get; set; }

@@ -32,55 +32,58 @@ namespace Avalonia.Data.Core.Parsers
 
         protected override Expression VisitUnary(UnaryExpression node)
         {
-            if (node.NodeType == ExpressionType.Not && node.Type == typeof(bool))
-            {
-                Nodes.Add(new LogicalNotNode());
-            }
-            else if (node.NodeType == ExpressionType.Convert)
-            {
-                if (node.Operand.Type.IsAssignableFrom(node.Type))
-                {
-                    // Ignore inheritance casts 
-                }
-                else
-                {
-                    throw new ExpressionParseException(0, $"Cannot parse non-inheritance casts in a binding expression.");
-                }
-            }
-            else if (node.NodeType == ExpressionType.TypeAs)
-            {
-                // Ignore as operator.
-            }
-            else
-            {
-                throw new ExpressionParseException(0, $"Unable to parse unary operator {node.NodeType} in a binding expression");
-            }
+            throw new NotImplementedException();
+            ////if (node.NodeType == ExpressionType.Not && node.Type == typeof(bool))
+            ////{
+            ////    Nodes.Add(new LogicalNotNode());
+            ////}
+            ////else if (node.NodeType == ExpressionType.Convert)
+            ////{
+            ////    if (node.Operand.Type.IsAssignableFrom(node.Type))
+            ////    {
+            ////        // Ignore inheritance casts 
+            ////    }
+            ////    else
+            ////    {
+            ////        throw new ExpressionParseException(0, $"Cannot parse non-inheritance casts in a binding expression.");
+            ////    }
+            ////}
+            ////else if (node.NodeType == ExpressionType.TypeAs)
+            ////{
+            ////    // Ignore as operator.
+            ////}
+            ////else
+            ////{
+            ////    throw new ExpressionParseException(0, $"Unable to parse unary operator {node.NodeType} in a binding expression");
+            ////}
 
-            return base.VisitUnary(node);
+            ////return base.VisitUnary(node);
         }
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            var visited = base.VisitMember(node);
-            Nodes.Add(new PropertyAccessorNode(node.Member.Name, _enableDataValidation));
-            return visited;
+            throw new NotImplementedException();
+            ////var visited = base.VisitMember(node);
+            ////Nodes.Add(new PropertyAccessorNode(node.Member.Name, _enableDataValidation));
+            ////return visited;
         }
 
         protected override Expression VisitIndex(IndexExpression node)
         {
-            Visit(node.Object);
+            throw new NotImplementedException();
+            ////Visit(node.Object);
 
-            if (node.Indexer == AvaloniaObjectIndexer)
-            {
-                var property = GetArgumentExpressionValue<AvaloniaProperty>(node.Arguments[0]);
-                Nodes.Add(new AvaloniaPropertyAccessorNode(property, _enableDataValidation));
-            }
-            else
-            {
-                Nodes.Add(new IndexerExpressionNode(node));
-            }
+            ////if (node.Indexer == AvaloniaObjectIndexer)
+            ////{
+            ////    var property = GetArgumentExpressionValue<AvaloniaProperty>(node.Arguments[0]);
+            ////    Nodes.Add(new AvaloniaPropertyAccessorNode(property, _enableDataValidation));
+            ////}
+            ////else
+            ////{
+            ////    Nodes.Add(new IndexerExpressionNode(node));
+            ////}
 
-            return node;
+            ////return node;
         }
 
         private static T GetArgumentExpressionValue<T>(Expression expr)
@@ -161,25 +164,25 @@ namespace Avalonia.Data.Core.Parsers
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            if (node.Method == CreateDelegateMethod)
-            {
-                var visited = Visit(node.Arguments[1]);
-                Nodes.Add(new PropertyAccessorNode(GetArgumentExpressionValue<MethodInfo>(node.Object!).Name, _enableDataValidation));
-                return node;
-            }
-            else if (node.Method.Name == StreamBindingExtensions.StreamBindingName || node.Method.Name.StartsWith(StreamBindingExtensions.StreamBindingName + '`'))
-            {
-                if (node.Method.IsStatic)
-                {
-                    Visit(node.Arguments[0]);
-                }
-                else
-                {
-                    Visit(node.Object);
-                }
-                Nodes.Add(new StreamNode());
-                return node;
-            }
+            ////if (node.Method == CreateDelegateMethod)
+            ////{
+            ////    var visited = Visit(node.Arguments[1]);
+            ////    Nodes.Add(new PropertyAccessorNode(GetArgumentExpressionValue<MethodInfo>(node.Object!).Name, _enableDataValidation));
+            ////    return node;
+            ////}
+            ////else if (node.Method.Name == StreamBindingExtensions.StreamBindingName || node.Method.Name.StartsWith(StreamBindingExtensions.StreamBindingName + '`'))
+            ////{
+            ////    if (node.Method.IsStatic)
+            ////    {
+            ////        Visit(node.Arguments[0]);
+            ////    }
+            ////    else
+            ////    {
+            ////        Visit(node.Object);
+            ////    }
+            ////    Nodes.Add(new StreamNode());
+            ////    return node;
+            ////}
 
             var property = TryGetPropertyFromMethod(node.Method);
 
