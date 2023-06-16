@@ -246,31 +246,31 @@ namespace Avalonia.Base.UnitTests.Data.Core
             GC.KeepAlive(data);
         }
 
-        ////[Fact]
-        ////public void Should_Track_Property_Chain_Changing()
-        ////{
-        ////    var data = new Class1 { Next = new Class2 { Bar = "bar" } };
-        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
-        ////    var result = new List<object>();
+        [Fact]
+        public void Should_Track_Property_Chain_Changing()
+        {
+            var data = new Class1 { Next = new Class2 { Bar = "bar" } };
+            var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar, typeof(object));
+            var result = new List<object>();
 
-        ////    var sub = target.Subscribe(x => result.Add(x));
-        ////    var old = data.Next;
-        ////    data.Next = new Class2 { Bar = "baz" };
-        ////    data.Next = new Class2 { Bar = null };
+            var sub = target.Subscribe(x => result.Add(x));
+            var old = data.Next;
+            data.Next = new Class2 { Bar = "baz" };
+            data.Next = new Class2 { Bar = null };
 
-        ////    Assert.Equal(new[] { "bar", "baz", null }, result);
+            Assert.Equal(new[] { "bar", "baz", null }, result);
 
-        ////    sub.Dispose();
+            sub.Dispose();
 
-        ////    // Forces WeakEvent compact
-        ////    Dispatcher.UIThread.RunJobs();
+            // Forces WeakEvent compact
+            Dispatcher.UIThread.RunJobs();
 
-        ////    Assert.Equal(0, data.PropertyChangedSubscriptionCount);
-        ////    Assert.Equal(0, data.Next.PropertyChangedSubscriptionCount);
-        ////    Assert.Equal(0, old.PropertyChangedSubscriptionCount);
+            Assert.Equal(0, data.PropertyChangedSubscriptionCount);
+            Assert.Equal(0, data.Next.PropertyChangedSubscriptionCount);
+            Assert.Equal(0, old.PropertyChangedSubscriptionCount);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
         ////[Fact]
         ////public void Should_Track_Property_Chain_Breaking_With_Null_Then_Mending()
@@ -286,7 +286,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////        }
         ////    };
 
-        ////    var target = UntypedBindingExpression.Create(data, o => ((o.Next as Class2).Next as Class2).Bar);
+        ////    var target = UntypedBindingExpression.Create(data, o => ((o.Next as Class2).Next as Class2).Bar, typeof(object));
         ////    var result = new List<object>();
 
         ////    var sub = target.Subscribe(x => result.Add(x));
@@ -564,28 +564,28 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    GC.KeepAlive(second);
         ////}
 
-        ////[Fact]
-        ////public void Should_Not_Keep_Source_Alive()
-        ////{
-        ////    Func<Tuple<UntypedBindingExpression, WeakReference>> run = () =>
-        ////    {
-        ////        var source = new Class1 { Foo = "foo" };
-        ////        var target = UntypedBindingExpression.Create(source, o => o.Foo);
-        ////        return Tuple.Create(target, new WeakReference(source));
-        ////    };
+        [Fact]
+        public void Should_Not_Keep_Source_Alive()
+        {
+            Func<Tuple<UntypedBindingExpression, WeakReference>> run = () =>
+            {
+                var source = new Class1 { Foo = "foo" };
+                var target = UntypedBindingExpression.Create(source, o => o.Foo, typeof(object));
+                return Tuple.Create(target, new WeakReference(source));
+            };
 
-        ////    var result = run();
-        ////    result.Item1.Subscribe(x => { });
+            var result = run();
+            result.Item1.Subscribe(x => { });
 
-        ////    // Mono trickery
-        ////    GC.Collect(2);
-        ////    GC.WaitForPendingFinalizers();
-        ////    GC.WaitForPendingFinalizers();
-        ////    GC.Collect(2);
+            // Mono trickery
+            GC.Collect(2);
+            GC.WaitForPendingFinalizers();
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2);
 
 
-        ////    Assert.Null(result.Item2.Target);
-        ////}
+            Assert.Null(result.Item2.Target);
+        }
 
         ////[Fact]
         ////public void Should_Not_Throw_Exception_On_Unsubscribe_When_Already_Unsubscribed()

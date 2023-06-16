@@ -9,6 +9,8 @@ namespace Avalonia.Data.Core.Parsers;
 [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
 internal class BindingExpressionVisitor<TIn> : ExpressionVisitor
 {
+    private static readonly PropertyInfo AvaloniaObjectIndexer;
+    private static readonly string IndexerGetterName = "get_Item";
     private readonly LambdaExpression _rootExpression;
     private readonly List<ExpressionNode> _nodes = new();
     private Expression? _head;
@@ -18,32 +20,16 @@ internal class BindingExpressionVisitor<TIn> : ExpressionVisitor
         _rootExpression = expression;
     }
 
+    static BindingExpressionVisitor()
+    {
+        AvaloniaObjectIndexer = typeof(AvaloniaObject).GetProperty("Item", new[] { typeof(AvaloniaProperty) })!;
+    }
+
     public static ExpressionNode[] BuildNodes<TOut>(Expression<Func<TIn, TOut>> expression)
     {
         var visitor = new BindingExpressionVisitor<TIn>(expression);
         visitor.Visit(expression);
         return visitor._nodes.ToArray();
-    }
-
-    public static Action<TIn, TOut> BuildWriteExpression<TOut>(Expression<Func<TIn, TOut>> expression)
-    {
-        var property = (expression.Body as MemberExpression)?.Member as PropertyInfo ??
-            throw new ArgumentException(
-                $"Cannot create a two-way binding for '{expression}' because the expression does not target a property.",
-                nameof(expression));
-
-        if (property.GetSetMethod() is not MethodInfo setMethod)
-            throw new ArgumentException(
-                $"Cannot create a two-way binding for '{expression}' because the property has no setter.",
-                nameof(expression));
-
-        var instanceParam = Expression.Parameter(typeof(TIn), "x");
-        var valueParam = Expression.Parameter(typeof(TOut), "value");
-        var lambda = Expression.Lambda<Action<TIn, TOut>>(
-            Expression.Call(instanceParam, setMethod, valueParam),
-            instanceParam,
-            valueParam);
-        return lambda.Compile();
     }
 
     protected override Expression VisitBinary(BinaryExpression node)
@@ -72,25 +58,21 @@ internal class BindingExpressionVisitor<TIn> : ExpressionVisitor
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
-        throw new NotImplementedException();
-        ////var result = base.VisitMethodCall(node);
+        var result = base.VisitMethodCall(node);
+        var method = node.Method;
 
-        ////if (node.Object is not null &&
-        ////    node.Object == _head &&
-        ////    node.Type.IsValueType == false)
-        ////{
-        ////    var i = _nodes.Count;
-        ////    var trigger = InccBindingTrigger<TIn>.TryCreate(i, node, _rootExpression) ??
-        ////        AvaloniaPropertyBindingTrigger<TIn>.TryCreate(i, node, _rootExpression) ??
-        ////        InpcBindingTrigger<TIn>.TryCreate(i, node, _rootExpression);
+        if (method.Name == IndexerGetterName &&
+            method.DeclaringType == typeof(AvaloniaObject) &&
+            method.GetParameters() is { } parameters &&
+            parameters.Length == 1 &&
+            parameters[0].ParameterType == typeof(AvaloniaProperty) &&
+            typeof(AvaloniaProperty).IsAssignableFrom(node.Arguments[0].Type))
+        {
+            var property = GetValue<AvaloniaProperty>(node.Arguments[0]);
+            _nodes.Add(new AvaloniaPropertyAccessorNode(property));
+        }
 
-        ////    if (trigger is not null)
-        ////        _nodes.Add(trigger);
-
-        ////    _head = node;
-        ////}
-
-        ////return result;
+        return result;
     }
 
     protected override Expression VisitParameter(ParameterExpression node)
@@ -106,5 +88,17 @@ internal class BindingExpressionVisitor<TIn> : ExpressionVisitor
         if (node.Operand == _head)
             _head = node;
         return result;
+    }
+
+    private static T GetValue<T>(Expression expr)
+    {
+        try
+        {
+            return Expression.Lambda<Func<T>>(expr).Compile(preferInterpretation: true)();
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new ExpressionParseException(0, "Unable to parse indexer value.", ex);
+        }
     }
 }
