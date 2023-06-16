@@ -66,19 +66,19 @@ namespace Avalonia.Base.UnitTests.Data.Core
             }
         }
 
-        ////[Fact]
-        ////public void SetValue_Should_Return_False_For_Missing_Property()
-        ////{
-        ////    var data = new Class1 { Next = new WithoutBar() };
-        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
+        [Fact]
+        public void SetValue_Should_Return_False_For_Missing_Property()
+        {
+            var data = new Person { Pet = new Cat() };
+            var target = UntypedBindingExpression.Create(data, o => (o.Pet as Dog).IsBarky, typeof(object));
 
-        ////    using (target.Subscribe(_ => { }))
-        ////    {
-        ////        Assert.False(target.SetValue("baz"));
-        ////    }
+            using (target.Subscribe(_ => { }))
+            {
+                Assert.False(target.SetValue("baz"));
+            }
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
         ////[Fact]
         ////public void SetValue_Should_Notify_New_Value_With_Inpc()
@@ -178,10 +178,9 @@ namespace Avalonia.Base.UnitTests.Data.Core
             }
         }
 
-        private class Dog : NotifyingBase, IAnimal
+        private class Animal : NotifyingBase, IAnimal
         {
             private string _name;
-            private IAnimal _next;
 
             public string Name
             {
@@ -192,24 +191,15 @@ namespace Avalonia.Base.UnitTests.Data.Core
                     RaisePropertyChanged(nameof(Name));
                 }
             }
-
-            public IAnimal Next
-            {
-                get => _next;
-                set
-                {
-                    _next = value;
-                    RaisePropertyChanged(nameof(Next));
-                }
-            }
         }
 
-        private class Class3 : Person
+        private class Dog : Animal
+        {
+            public bool IsBarky { get; set; }
+        }
+
+        private class Cat : Animal
         {
         }
-
-        //private class WithoutBar : NotifyingBase, IAnimal
-        //{
-        //}
     }
 }
