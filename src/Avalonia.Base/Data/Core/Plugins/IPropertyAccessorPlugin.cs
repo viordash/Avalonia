@@ -4,8 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Avalonia.Data.Core.Plugins
 {
     /// <summary>
-    /// Defines how a member is read, written and observed by an
-    /// <see cref="ExpressionObserver"/>.
+    /// Defines how a member is read, written and observed by a binding.
     /// </summary>
     public interface IPropertyAccessorPlugin
     {

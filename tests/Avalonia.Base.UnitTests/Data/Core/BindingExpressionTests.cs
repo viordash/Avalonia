@@ -16,17 +16,17 @@ namespace Avalonia.Base.UnitTests.Data.Core
 {
     public class BindingExpressionTests : IClassFixture<InvariantCultureFixture>
     {
-        ////[Fact]
-        ////public async Task Should_Get_Simple_Property_Value()
-        ////{
-        ////    var data = new Class1 { StringValue = "foo" };
-        ////    var target = new BindingExpression(ExpressionObserver.Create(data, o => o.StringValue), typeof(string));
-        ////    var result = await target.Take(1);
+        [Fact]
+        public async Task Should_Get_Simple_Property_Value()
+        {
+            var data = new Class1 { StringValue = "foo" };
+            var target = UntypedBindingExpression.Create(data, o => o.StringValue, typeof(string));
+            var result = await target.Take(1);
 
-        ////    Assert.Equal("foo", result);
+            Assert.Equal("foo", result);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
         ////[Fact]
         ////public void Should_Set_Simple_Property_Value()
@@ -54,17 +54,17 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    GC.KeepAlive(data);
         ////}
 
-        ////[Fact]
-        ////public async Task Should_Convert_Get_String_To_Double()
-        ////{
-        ////    var data = new Class1 { StringValue = $"{5.6}" };
-        ////    var target = new BindingExpression(ExpressionObserver.Create(data, o => o.StringValue), typeof(double));
-        ////    var result = await target.Take(1);
+        [Fact]
+        public async Task Should_Convert_Get_String_To_Double()
+        {
+            var data = new Class1 { StringValue = $"{5.6}" };
+            var target = UntypedBindingExpression.Create(data, o => o.StringValue, typeof(double));
+            var result = await target.Take(1);
 
-        ////    Assert.Equal(5.6, result);
+            Assert.Equal(5.6, result);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
         ////[Fact]
         ////public async Task Getting_Invalid_Double_String_Should_Return_BindingError()
@@ -346,29 +346,29 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    target.Subscribe(x => result = x);
 
         ////    Assert.Equal("foo", result);
-            
+
         ////    data.StringValue = null;
         ////    Assert.Equal("bar", result);
 
         ////    GC.KeepAlive(data);
         ////}
 
-        ////private class Class1 : NotifyingBase
-        ////{
-        ////    private string _stringValue;
-        ////    private double _doubleValue;
+        private class Class1 : NotifyingBase
+        {
+            private string _stringValue;
+            private double _doubleValue;
 
-        ////    public string StringValue
-        ////    {
-        ////        get { return _stringValue; }
-        ////        set { _stringValue = value; RaisePropertyChanged(); }
-        ////    }
+            public string StringValue
+            {
+                get { return _stringValue; }
+                set { _stringValue = value; RaisePropertyChanged(); }
+            }
 
-        ////    public double DoubleValue
-        ////    {
-        ////        get { return _doubleValue; }
-        ////        set { _doubleValue = value; RaisePropertyChanged(); }
-        ////    }
-        ////}
+            public double DoubleValue
+            {
+                get { return _doubleValue; }
+                set { _doubleValue = value; RaisePropertyChanged(); }
+            }
+        }
     }
 }

@@ -11,7 +11,12 @@ namespace Avalonia.Data.Core.Plugins
         /// An ordered collection of property accessor plugins that can be used to customize
         /// the reading and subscription of property values on a type.
         /// </summary>
-        public static IList<IPropertyAccessorPlugin> PropertyAccessors { get; } = new List<IPropertyAccessorPlugin>();
+        public static IList<IPropertyAccessorPlugin> PropertyAccessors { get; } = new List<IPropertyAccessorPlugin>
+        {
+            new AvaloniaPropertyAccessorPlugin(),
+            new MethodAccessorPlugin(),
+            new InpcPropertyAccessorPlugin(),
+        };
 
         /// <summary>
         /// An ordered collection of validation checker plugins that can be used to customize
