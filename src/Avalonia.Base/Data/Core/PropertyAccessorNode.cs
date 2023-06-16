@@ -18,6 +18,11 @@ internal class PropertyAccessorNode : ExpressionNode
 
     public string PropertyName { get; }
 
+    public override bool WriteValueToSource(object? value)
+    {
+        return _accessor?.SetValue(value, BindingPriority.LocalValue) ?? false;
+    }
+
     protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
         _accessor?.Dispose();

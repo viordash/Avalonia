@@ -49,6 +49,8 @@ internal abstract class ExpressionNode
         }
     }
 
+    public virtual bool WriteValueToSource(object? value) => false;
+
     protected void SetValue(object? value)
     {
         // We raise a change notification if:

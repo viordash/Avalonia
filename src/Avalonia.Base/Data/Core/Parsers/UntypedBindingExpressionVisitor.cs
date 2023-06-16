@@ -7,27 +7,21 @@ using System.Reflection;
 namespace Avalonia.Data.Core.Parsers;
 
 [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
-internal class BindingExpressionVisitor<TIn> : ExpressionVisitor
+internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
 {
-    private static readonly PropertyInfo AvaloniaObjectIndexer;
     private static readonly string IndexerGetterName = "get_Item";
     private readonly LambdaExpression _rootExpression;
     private readonly List<ExpressionNode> _nodes = new();
     private Expression? _head;
 
-    public BindingExpressionVisitor(LambdaExpression expression)
+    public UntypedBindingExpressionVisitor(LambdaExpression expression)
     {
         _rootExpression = expression;
     }
 
-    static BindingExpressionVisitor()
-    {
-        AvaloniaObjectIndexer = typeof(AvaloniaObject).GetProperty("Item", new[] { typeof(AvaloniaProperty) })!;
-    }
-
     public static ExpressionNode[] BuildNodes<TOut>(Expression<Func<TIn, TOut>> expression)
     {
-        var visitor = new BindingExpressionVisitor<TIn>(expression);
+        var visitor = new UntypedBindingExpressionVisitor<TIn>(expression);
         visitor.Visit(expression);
         return visitor._nodes.ToArray();
     }

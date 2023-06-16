@@ -16,6 +16,17 @@ internal class AvaloniaPropertyAccessorNode : ExpressionNode
 
     public AvaloniaProperty Property { get; }
 
+    public override bool WriteValueToSource(object? value)
+    {
+        if (Source is AvaloniaObject o)
+        {
+            o.SetValue(Property, value);
+            return true;
+        }
+
+        return false;
+    }
+
     protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
         if (oldSource is AvaloniaObject oldObject)
