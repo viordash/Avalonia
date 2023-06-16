@@ -23,8 +23,10 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         _source = new(source);
         _nodes = nodes;
         _targetType = targetType;
+
+        var i = 0;
         foreach (var node in nodes)
-            node.SetOwner(this);
+            node.SetOwner(this, i++);
     }
 
     public static UntypedBindingExpression Create<TIn, TOut>(
@@ -35,6 +37,20 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
     {
         var nodes = BindingExpressionVisitor<TIn>.BuildNodes(expression);
         return new UntypedBindingExpression(source, nodes, targetType);
+    }
+
+    public void OnNodeValueChanged(int nodeIndex, object? value)
+    {
+        var source = value;
+
+        for (var i = nodeIndex + 1; i < _nodes.Length; i++)
+        {
+            var node = _nodes[i];
+            node.SetSource(value);
+            source = node.Value;
+        }
+
+        PublishValue();
     }
 
     void IDisposable.Dispose()
@@ -63,13 +79,10 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
             source is null)
             return;
 
-        foreach (var node in _nodes)
-        {
-            node.SetSource(source);
-            source = node.Value;
-        }
-
-        PublishValue();
+        if (_nodes.Length > 0)
+            _nodes[0].SetSource(source);
+        else
+            _observer.OnNext(null);
     }
 
     private void Stop()

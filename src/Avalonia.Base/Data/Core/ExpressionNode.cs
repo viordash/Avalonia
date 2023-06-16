@@ -7,6 +7,7 @@ internal abstract class ExpressionNode
     private WeakReference<object?>? _source;
     private WeakReference<object?>? _value;
 
+    public int Index { get; private set; }
     public UntypedBindingExpression? Owner { get; private set; }
     
     public object? Source
@@ -29,11 +30,12 @@ internal abstract class ExpressionNode
         }
     }
 
-    public void SetOwner(UntypedBindingExpression owner)
+    public void SetOwner(UntypedBindingExpression owner, int index)
     {
         if (Owner is not null)
             throw new InvalidOperationException($"{this} already has an owner.");
         Owner = owner;
+        Index = index;
     }
 
     public void SetSource(object? source)
@@ -49,7 +51,18 @@ internal abstract class ExpressionNode
 
     protected void SetValue(object? value)
     {
-        _value = new(value);
+        // We raise a change notification if:
+        //
+        // - This is the initial value (_value is null)
+        // - The old value has been GC'd - in this case we don't know if the new value is different
+        // - The new value is different to the old value
+        if (_value is null ||
+            _value.TryGetTarget(out var oldValue) == false ||
+            !Equals(oldValue, value))
+        {
+            _value = new(value);
+            Owner?.OnNodeValueChanged(Index, value);
+        }
     }
 
     protected abstract void OnSourceChanged(object? oldSource, object? newSource);
