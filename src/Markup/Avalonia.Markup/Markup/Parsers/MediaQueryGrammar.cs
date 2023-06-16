@@ -231,11 +231,6 @@ namespace Avalonia.Markup.Parsers
             {
                 var identifier = r.TakeWhile(c => !char.IsWhiteSpace(c));
 
-                if (identifier.SequenceEqual("or".AsSpan()))
-                {
-                    return (State.Start, new OrSyntax());
-                }
-
                 if (identifier.SequenceEqual("and".AsSpan()))
                 {
                     return (State.Start, new AndSyntax());
