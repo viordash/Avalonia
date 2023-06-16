@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Avalonia.Controls;
@@ -80,49 +81,49 @@ namespace Avalonia.Base.UnitTests.Data.Core
             GC.KeepAlive(data);
         }
 
-        ////[Fact]
-        ////public void SetValue_Should_Notify_New_Value_With_Inpc()
-        ////{
-        ////    var data = new Class1();
-        ////    var target = UntypedBindingExpression.Create(data, o => o.Foo);
-        ////    var result = new List<object>();
+        [Fact]
+        public void SetValue_Should_Notify_New_Value_With_Inpc()
+        {
+            var data = new Person();
+            var target = UntypedBindingExpression.Create(data, o => o.Name, typeof(object));
+            var result = new List<object>();
 
-        ////    target.Subscribe(x => result.Add(x));
-        ////    target.SetValue("bar");
+            target.Subscribe(result.Add);
+            target.SetValue("Frank");
 
-        ////    Assert.Equal(new[] { null, "bar" }, result);
+            Assert.Equal(new[] { null, "Frank" }, result);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
-        ////[Fact]
-        ////public void SetValue_Should_Notify_New_Value_Without_Inpc()
-        ////{
-        ////    var data = new Class1();
-        ////    var target = UntypedBindingExpression.Create(data, o => o.Bar);
-        ////    var result = new List<object>();
+        [Fact]
+        public void SetValue_Should_Notify_New_Value_Without_Inpc()
+        {
+            var data = new Snail();
+            var target = UntypedBindingExpression.Create(data, o => o.Name, typeof(object));
+            var result = new List<object>();
 
-        ////    target.Subscribe(x => result.Add(x));
-        ////    target.SetValue("bar");
+            target.Subscribe(result.Add);
+            target.SetValue("Frank");
 
-        ////    Assert.Equal(new[] { null, "bar" }, result);
+            Assert.Equal(new[] { null, "Frank" }, result);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
-        ////[Fact]
-        ////public void SetValue_Should_Return_False_For_Missing_Object()
-        ////{
-        ////    var data = new Class1();
-        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
+        [Fact]
+        public void SetValue_Should_Return_False_For_Missing_Object()
+        {
+            var data = new Person();
+            var target = UntypedBindingExpression.Create(data, o => (o.Pet as Dog).Name, typeof(object));
 
-        ////    using (target.Subscribe(_ => { }))
-        ////    {
-        ////        Assert.False(target.SetValue("baz"));
-        ////    }
+            using (target.Subscribe(_ => { }))
+            {
+                Assert.False(target.SetValue("Fido"));
+            }
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
         /// <summary>
         /// Test for #831 - Bound properties are incorrectly updated when changing tab items.
@@ -149,7 +150,6 @@ namespace Avalonia.Base.UnitTests.Data.Core
         private interface IAnimal
         {
             string Name { get; }
-            int PropertyChangedSubscriptionCount { get; }
         }
 
         private class Person : NotifyingBase
@@ -200,6 +200,11 @@ namespace Avalonia.Base.UnitTests.Data.Core
 
         private class Cat : Animal
         {
+        }
+
+        private class Snail : IAnimal
+        {
+            public string Name { get; set; }
         }
     }
 }

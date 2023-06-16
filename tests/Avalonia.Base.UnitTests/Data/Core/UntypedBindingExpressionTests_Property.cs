@@ -533,19 +533,18 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////        result);
         ////}
 
-        ////[Fact]
-        ////public void Should_Not_Throw_Exception_On_Duplicate_Properties()
-        ////{
-        ////    // Repro of https://github.com/AvaloniaUI/Avalonia/issues/4733.
-        ////    var source = new MyViewModel();
-        ////    var target = new PropertyAccessorNode("Name", false);
+        [Fact]
+        public void Should_Not_Throw_Exception_On_Duplicate_Properties()
+        {
+            // Repro of https://github.com/AvaloniaUI/Avalonia/issues/4733.
+            var source = new MyViewModel();
+            var target = UntypedBindingExpression.Create(source, x => x.Name, typeof(object));
+            var result = new List<object>();
 
-        ////    target.Target = new WeakReference<object>(source);
+            target.Subscribe(x => result.Add(x));
 
-        ////    var result = new List<object>();
-
-        ////    target.Subscribe(x => result.Add(x));
-        ////}
+            Assert.Equal(new[] { "NewName" }, result);
+        }
 
         ////[Fact]
         ////public void RootGetter_Is_Reevaluated_On_Subscribe()
@@ -565,9 +564,9 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    Assert.Equal(new object[] { "foo", "bar" }, result);
         ////}
 
-        ////public class MyViewModelBase { public object Name => "Name"; }
+        public class MyViewModelBase { public object Name => "Name"; }
 
-        ////public class MyViewModel : MyViewModelBase { public new string Name => "NewName"; }
+        public class MyViewModel : MyViewModelBase { public new string Name => "NewName"; }
 
         private interface INext
         {
@@ -636,10 +635,6 @@ namespace Avalonia.Base.UnitTests.Data.Core
         private class Class3 : Class1
         {
         }
-
-        ////private class WithoutBar : NotifyingBase, INext
-        ////{
-        ////}
 
         private static Recorded<Notification<T>> OnNext<T>(long time, T value)
         {
