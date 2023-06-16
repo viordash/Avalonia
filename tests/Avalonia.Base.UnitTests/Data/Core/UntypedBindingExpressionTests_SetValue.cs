@@ -13,15 +13,15 @@ namespace Avalonia.Base.UnitTests.Data.Core
         [Fact]
         public void Should_Set_Simple_Property_Value()
         {
-            var data = new { Foo = "foo" };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+            var data = new Person { Name = "Frank" };
+            var target = UntypedBindingExpression.Create(data, o => o.Name, typeof(object));
 
             using (target.Subscribe(_ => { }))
             {
-                target.SetValue("bar");
+                target.SetValue("Kups");
             }
 
-            Assert.Equal("foo", data.Foo);
+            Assert.Equal("Kups", data.Name);
         }
 
         [Fact]
@@ -154,29 +154,22 @@ namespace Avalonia.Base.UnitTests.Data.Core
 
         private class Person : NotifyingBase
         {
-            private string _firstName;
-            private string _lastName;
+            private string _name;
             private IAnimal _pet;
 
-            public string FirstName
+            public string Name
             {
-                get { return _firstName; }
+                get => _name;
                 set
                 {
-                    _firstName = value;
-                    RaisePropertyChanged(nameof(FirstName));
+                    _name = value;
+                    RaisePropertyChanged(nameof(Name));
                 }
-            }
-
-            public string LastName
-            {
-                get { return _lastName; }
-                set { _lastName = value; }
             }
 
             public IAnimal Pet
             {
-                get { return _pet; }
+                get => _pet;
                 set
                 {
                     _pet = value;
@@ -192,7 +185,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
 
             public string Name
             {
-                get { return _name; }
+                get => _name;
                 set
                 {
                     _name = value;
@@ -202,7 +195,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
 
             public IAnimal Next
             {
-                get { return _next; }
+                get => _next;
                 set
                 {
                     _next = value;
