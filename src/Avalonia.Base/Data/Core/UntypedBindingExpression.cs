@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
 using Avalonia.Data.Core.Parsers;
+using Avalonia.Reactive;
 using Avalonia.Utilities;
 
 namespace Avalonia.Data.Core;
@@ -17,9 +18,11 @@ namespace Avalonia.Data.Core;
 [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
 internal class UntypedBindingExpression : IObservable<object?>, IDisposable
 {
-    private readonly WeakReference<object?> _source;
+    private readonly IObservable<object?>? _sourceObservable;
+    private readonly WeakReference<object?>? _source;
     private readonly ExpressionNode[] _nodes;
     private readonly Type _targetType;
+    private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
 
     /// <summary>
@@ -34,6 +37,26 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         Type targetType)
     {
         _source = new(source);
+        _nodes = nodes;
+        _targetType = targetType;
+
+        var i = 0;
+        foreach (var node in nodes)
+            node.SetOwner(this, i++);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UntypedBindingExpression"/> class.
+    /// </summary>
+    /// <param name="source">An observable which produces the source from which the value will be read.</param>
+    /// <param name="nodes">The nodes representing the binding path.</param>
+    /// <param name="targetType">The type to which produced values should be converted.</param>
+    public UntypedBindingExpression(
+        IObservable<object?> source,
+        ExpressionNode[] nodes,
+        Type targetType)
+    {
+        _sourceObservable = source;
         _nodes = nodes;
         _targetType = targetType;
 
@@ -74,6 +97,24 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         return new UntypedBindingExpression(source, nodes, targetType);
     }
 
+    /// <summary>
+    /// Creates an <see cref="UntypedBindingExpression"/> from an expression tree.
+    /// </summary>
+    /// <typeparam name="TIn">The input type of the binding expression.</typeparam>
+    /// <typeparam name="TOut">The output type of the binding expression.</typeparam>
+    /// <param name="source">An observable which produces the source from which the value will be read.</param>
+    /// <param name="expression">The expression representing the binding path.</param>
+    /// <param name="targetType">The type to which produced values should be converted.</param>
+    public static UntypedBindingExpression Create<TIn, TOut>(
+        IObservable<TIn> source,
+        Expression<Func<TIn, TOut>> expression,
+        Type targetType)
+            where TIn : class?
+    {
+        var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
+        return new UntypedBindingExpression(source, nodes, targetType);
+    }
+
     void IDisposable.Dispose()
     {
         if (_observer is null)
@@ -86,7 +127,7 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
     {
         if (_observer is not null)
             throw new InvalidOperationException(
-                $"A {nameof(UntypedBindingExpression)} may only have a single subscriber.");
+                $"An {nameof(UntypedBindingExpression)} may only have a single subscriber.");
 
         _observer = observer ?? throw new ArgumentNullException(nameof(observer));
         Start();
@@ -103,19 +144,31 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
 
     private void Start()
     {
-        if (_observer is null ||
-            !_source.TryGetTarget(out var source) || 
-            source is null)
+        if (_observer is null)
             return;
 
-        if (_nodes.Length > 0)
+        if (_sourceSubscription is not null)
+            throw new InvalidOperationException(
+                $"The {nameof(UntypedBindingExpression)} has already been started.");
+
+        if (_sourceObservable is not null)
+            _sourceSubscription = _sourceObservable.Subscribe(OnSourceChanged);
+        
+        if (_nodes.Length > 0  && _source?.TryGetTarget(out var source) == true)
+        {
             _nodes[0].SetSource(source);
+        }
         else
+        {
             _observer.OnNext(null);
+        }
     }
 
     private void Stop()
     {
+        _sourceSubscription?.Dispose();
+        _sourceSubscription = null;
+
         foreach (var node in _nodes)
             node.SetSource(null);
     }
@@ -131,5 +184,10 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         {
             _observer.OnNext(convertedValue);
         }
+    }
+
+    private void OnSourceChanged(object? source)
+    {
+
     }
 }

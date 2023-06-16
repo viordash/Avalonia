@@ -1,5 +1,6 @@
 using System;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using Avalonia.Controls;
 using Avalonia.Data.Core;
 using Avalonia.UnitTests;
@@ -70,25 +71,23 @@ namespace Avalonia.Base.UnitTests.Data.Core
         /// Test for #831 - Bound properties are incorrectly updated when changing tab items.
         /// </summary>
         /// <remarks>
-        /// There was a bug whereby pushing a null as the UntypedBindingExpression root didn't update
-        /// the leaf node, cauing a subsequent SetValue to update an object that should have become
-        /// unbound.
+        /// There was a bug whereby pushing a null as the source didn't update the leaf node,
+        /// causing a subsequent SetValue to update an object that should have become unbound.
         /// </remarks>
-        ////[Fact]
-        ////public void Pushing_Null_To_RootObservable_Updates_Leaf_Node()
-        ////{
-        ////    var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
-        ////    var rootObservable = new BehaviorSubject<Class1>(data);
-        ////    var target = UntypedBindingExpression.Create(rootObservable, o => o.Foo.Bar, typeof(object));
+        [Fact]
+        public void Pushing_Null_To_RootObservable_Updates_Leaf_Node()
+        {
+            var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
+            var rootObservable = new BehaviorSubject<Class1>(data);
+            var target = UntypedBindingExpression.Create(rootObservable, o => o.Foo.Bar, typeof(object));
 
-        ////    using (target.Subscribe(_ => { }))
-        ////    {
-        ////        rootObservable.OnNext(null);
-        ////        target.SetValue("baz");
-        ////        Assert.Equal("bar", data.Foo.Bar);
-        ////    }
-
-        ////}
+            using (target.Subscribe(_ => { }))
+            {
+                rootObservable.OnNext(null);
+                target.SetValue("baz");
+                Assert.Equal("bar", data.Foo.Bar);
+            }
+        }
 
         private class Class1 : NotifyingBase
         {
