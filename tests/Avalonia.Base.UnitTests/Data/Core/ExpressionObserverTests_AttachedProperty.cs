@@ -15,7 +15,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////public async Task Should_Get_Attached_Property_Value()
         ////{
         ////    var data = new Class1();
-        ////    var target = ExpressionObserver.Create(data, o => o[Owner.FooProperty]);
+        ////    var target = UntypedBindingExpression.Create(data, o => o[Owner.FooProperty]);
         ////    var result = await target.Take(1);
 
         ////    Assert.Equal("foo", result);
@@ -34,7 +34,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////        }
         ////    };
 
-        ////    var target = ExpressionObserver.Create(data, o => o.Next[Owner.FooProperty]);
+        ////    var target = UntypedBindingExpression.Create(data, o => o.Next[Owner.FooProperty]);
         ////    var result = await target.Take(1);
 
         ////    Assert.Equal("bar", result);
@@ -46,7 +46,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////public void Should_Track_Simple_Attached_Value()
         ////{
         ////    var data = new Class1();
-        ////    var target = ExpressionObserver.Create(data, o => o[Owner.FooProperty]);
+        ////    var target = UntypedBindingExpression.Create(data, o => o[Owner.FooProperty]);
         ////    var result = new List<object>();
 
         ////    var sub = target.Subscribe(x => result.Add(x));
@@ -70,7 +70,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////        }
         ////    };
 
-        ////    var target = ExpressionObserver.Create(data, o => o.Next[Owner.FooProperty]);
+        ////    var target = UntypedBindingExpression.Create(data, o => o.Next[Owner.FooProperty]);
         ////    var result = new List<object>();
 
         ////    var sub = target.Subscribe(x => result.Add(x));
@@ -86,10 +86,10 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////[Fact]
         ////public void Should_Not_Keep_Source_Alive()
         ////{
-        ////    Func<Tuple<ExpressionObserver, WeakReference>> run = () =>
+        ////    Func<Tuple<UntypedBindingExpression, WeakReference>> run = () =>
         ////    {
         ////        var source = new Class1();
-        ////        var target = ExpressionObserver.Create(source, o => o.Next[Owner.FooProperty]);
+        ////        var target = UntypedBindingExpression.Create(source, o => o.Next[Owner.FooProperty]);
         ////        return Tuple.Create(target, new WeakReference(source));
         ////    };
 

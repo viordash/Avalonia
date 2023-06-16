@@ -14,7 +14,7 @@
 ////        public void Should_Set_Simple_Property_Value()
 ////        {
 ////            var data = new { Foo = "foo" };
-////            var target = ExpressionObserver.Create(data, o => o.Foo);
+////            var target = UntypedBindingExpression.Create(data, o => o.Foo);
 
 ////            using (target.Subscribe(_ => { }))
 ////            {
@@ -28,7 +28,7 @@
 ////        public void Should_Set_Value_On_Simple_Property_Chain()
 ////        {
 ////            var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
-////            var target = ExpressionObserver.Create(data, o => o.Foo.Bar);
+////            var target = UntypedBindingExpression.Create(data, o => o.Foo.Bar);
 
 
 ////            using (target.Subscribe(_ => { }))
@@ -43,9 +43,9 @@
 ////        public void Should_Not_Try_To_Set_Value_On_Broken_Chain()
 ////        {
 ////            var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
-////            var target = ExpressionObserver.Create(data, o => o.Foo.Bar);
+////            var target = UntypedBindingExpression.Create(data, o => o.Foo.Bar);
 
-////            // Ensure the ExpressionObserver's subscriptions are kept active.
+////            // Ensure the UntypedBindingExpression's subscriptions are kept active.
 ////            using (target.OfType<string>().Subscribe(x => { }))
 ////            {
 ////                data.Foo = null;
@@ -58,7 +58,7 @@
 ////        /// Test for #831 - Bound properties are incorrectly updated when changing tab items.
 ////        /// </summary>
 ////        /// <remarks>
-////        /// There was a bug whereby pushing a null as the ExpressionObserver root didn't update
+////        /// There was a bug whereby pushing a null as the UntypedBindingExpression root didn't update
 ////        /// the leaf node, cauing a subsequent SetValue to update an object that should have become
 ////        /// unbound.
 ////        /// </remarks>
@@ -67,7 +67,7 @@
 ////        {
 ////            var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
 ////            var rootObservable = new BehaviorSubject<Class1>(data);
-////            var target = ExpressionObserver.Create(rootObservable, o => o.Foo.Bar);
+////            var target = UntypedBindingExpression.Create(rootObservable, o => o.Foo.Bar);
 
 ////            using (target.Subscribe(_ => { }))
 ////            {

@@ -16,7 +16,7 @@
 ////        {
 ////            var target = new object();
 
-////            var observer = ExpressionObserver.Create(target, o => o);
+////            var observer = UntypedBindingExpression.Create(target, o => o);
 
 ////            Assert.Equal(target, await observer.Take(1));
 ////            GC.KeepAlive(target);
@@ -27,7 +27,7 @@
 ////        {
 ////            var target = new Class1();
 
-////            var observer = ExpressionObserver.Create(target, o => o.Foo);
+////            var observer = UntypedBindingExpression.Create(target, o => o.Foo);
 
 ////            Assert.Null(await observer.Take(1));
 
@@ -45,7 +45,7 @@
 ////        public void Property_Access_Expression_Can_Set_Property()
 ////        {
 ////            var data = new Class1();
-////            var target = ExpressionObserver.Create(data, o => o.Foo);
+////            var target = UntypedBindingExpression.Create(data, o => o.Foo);
 
 ////            using (target.Subscribe(_ => { }))
 ////            {
@@ -60,7 +60,7 @@
 ////        {
 ////            var data = new[] { 1, 2, 3, 4 };
 
-////            var target = ExpressionObserver.Create(data, o => o[0]);
+////            var target = UntypedBindingExpression.Create(data, o => o[0]);
 
 ////            Assert.Equal(data[0], await target.Take(1));
 ////            GC.KeepAlive(data);
@@ -71,7 +71,7 @@
 ////        {
 ////            var data = new List<int> { 1, 2, 3, 4 };
 
-////            var target = ExpressionObserver.Create(data, o => o[0]);
+////            var target = UntypedBindingExpression.Create(data, o => o[0]);
 
 ////            Assert.Equal(data[0], await target.Take(1));
 ////            GC.KeepAlive(data);
@@ -86,7 +86,7 @@
 
 ////            data.Add(key, new object());
 
-////            var target = ExpressionObserver.Create(data, o => o[key]);
+////            var target = UntypedBindingExpression.Create(data, o => o[key]);
 
 ////            Assert.Equal(data[key], await target.Take(1));
 
@@ -98,7 +98,7 @@
 ////        {
 ////            var data = new[] { 1, 2, 3, 4 };
 
-////            var target = ExpressionObserver.Create(data, o => o[0]);
+////            var target = UntypedBindingExpression.Create(data, o => o[0]);
 
 ////            using (target.Subscribe(_ => { }))
 ////            {
@@ -113,7 +113,7 @@
 ////        {
 ////            NotifyingBase test = new Class1 { Foo = "Test" };
 
-////            var target = ExpressionObserver.Create(test, o => ((Class1)o).Foo);
+////            var target = UntypedBindingExpression.Create(test, o => ((Class1)o).Foo);
 
 ////            Assert.Equal("Test", await target.Take(1));
 
@@ -125,7 +125,7 @@
 ////        {
 ////            var test = 1;
 
-////            Assert.Throws<ExpressionParseException>(() => ExpressionObserver.Create(test, o => (double)o));
+////            Assert.Throws<ExpressionParseException>(() => UntypedBindingExpression.Create(test, o => (double)o));
 ////        }
 
 ////        [Fact]
@@ -133,7 +133,7 @@
 ////        {
 ////            NotifyingBase test = new Class1 { Foo = "Test" };
 
-////            var target = ExpressionObserver.Create(test, o => (o as Class1).Foo);
+////            var target = UntypedBindingExpression.Create(test, o => (o as Class1).Foo);
 
 ////            Assert.Equal("Test", await target.Take(1));
 
@@ -145,7 +145,7 @@
 ////        {
 ////            var test = new Class2();
 
-////            var target = ExpressionObserver.Create(test, o => o[Class2.FooProperty]);
+////            var target = UntypedBindingExpression.Create(test, o => o[Class2.FooProperty]);
 
 ////            Assert.Equal("foo", await target.Take(1));
 
@@ -157,7 +157,7 @@
 ////        {
 ////            var test = new Class1 { Foo = "Test" };
 
-////            var target = ExpressionObserver.Create(test, o => o.Foo.Length);
+////            var target = UntypedBindingExpression.Create(test, o => o.Foo.Length);
 
 ////            Assert.Equal(test.Foo.Length, await target.Take(1));
 
@@ -170,7 +170,7 @@
 ////            using (var sync = UnitTestSynchronizationContext.Begin())
 ////            {
 ////                var data = new { Foo = Task.FromResult("foo") };
-////                var target = ExpressionObserver.Create(data, o => o.Foo.StreamBinding());
+////                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding());
 ////                var result = new List<object>();
 
 ////                var sub = target.Subscribe(x => result.Add(x));
@@ -185,7 +185,7 @@
 ////        public async Task Should_Create_Method_Binding()
 ////        {
 ////            var data = new Class3();
-////            var target = ExpressionObserver.Create(data, o => (Action)o.Method);
+////            var target = UntypedBindingExpression.Create(data, o => (Action)o.Method);
 ////            var value = await target.Take(1);
 
 ////            Assert.IsAssignableFrom<Delegate>(value);

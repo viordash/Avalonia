@@ -14,7 +14,7 @@
 ////        public async Task Should_Negate_Boolean_Value()
 ////        {
 ////            var data = new { Foo = true };
-////            var target = ExpressionObserver.Create(data, o => !o.Foo);
+////            var target = UntypedBindingExpression.Create(data, o => !o.Foo);
 ////            var result = await target.Take(1);
 
 ////            Assert.False((bool)result);
@@ -26,7 +26,7 @@
 ////        public void Can_SetValue_For_Valid_Value()
 ////        {
 ////            var data = new Test { Foo = true };
-////            var target = ExpressionObserver.Create(data, o => !o.Foo);
+////            var target = UntypedBindingExpression.Create(data, o => !o.Foo);
 ////            target.Subscribe(_ => { });
 
 ////            Assert.True(target.SetValue(true));

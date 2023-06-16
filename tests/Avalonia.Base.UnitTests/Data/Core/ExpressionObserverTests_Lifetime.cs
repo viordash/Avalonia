@@ -16,7 +16,7 @@
 ////        public void Should_Complete_When_Source_Observable_Completes()
 ////        {
 ////            var source = new BehaviorSubject<object>(1);
-////            var target = ExpressionObserver.Create<object, object>(source, o => o);
+////            var target = UntypedBindingExpression.Create<object, object>(source, o => o);
 ////            var completed = false;
 
 ////            target.Subscribe(_ => { }, () => completed = true);
@@ -29,7 +29,7 @@
 ////        public void Should_Complete_When_Source_Observable_Errors()
 ////        {
 ////            var source = new BehaviorSubject<object>(1);
-////            var target = ExpressionObserver.Create<object, object>(source, o => o);
+////            var target = UntypedBindingExpression.Create<object, object>(source, o => o);
 ////            var completed = false;
 
 ////            target.Subscribe(_ => { }, () => completed = true);
@@ -42,7 +42,7 @@
 ////        public void Should_Complete_When_Update_Observable_Completes()
 ////        {
 ////            var update = new Subject<ValueTuple>();
-////            var target = ExpressionObserver.Create(() => 1, o => o, update);
+////            var target = UntypedBindingExpression.Create(() => 1, o => o, update);
 ////            var completed = false;
 
 ////            target.Subscribe(_ => { }, () => completed = true);
@@ -55,7 +55,7 @@
 ////        public void Should_Complete_When_Update_Observable_Errors()
 ////        {
 ////            var update = new Subject<ValueTuple>();
-////            var target = ExpressionObserver.Create(() => 1, o => o, update);
+////            var target = UntypedBindingExpression.Create(() => 1, o => o, update);
 ////            var completed = false;
 
 ////            target.Subscribe(_ => { }, () => completed = true);
@@ -70,7 +70,7 @@
 ////            var scheduler = new TestScheduler();
 ////            var source = scheduler.CreateColdObservable(
 ////                OnNext(1, new { Foo = "foo" }));
-////            var target = ExpressionObserver.Create(source, o => o.Foo);
+////            var target = UntypedBindingExpression.Create(source, o => o.Foo);
 ////            var result = new List<object>();
 
 ////            using (target.Subscribe(x => result.Add(x)))
@@ -89,7 +89,7 @@
 ////            var scheduler = new TestScheduler();
 ////            var update = scheduler.CreateColdObservable<ValueTuple>();
 ////            var data = new { Foo = "foo" };
-////            var target = ExpressionObserver.Create(() => data, o => o.Foo, update);
+////            var target = UntypedBindingExpression.Create(() => data, o => o.Foo, update);
 ////            var result = new List<object>();
 
 ////            using (target.Subscribe(x => result.Add(x)))

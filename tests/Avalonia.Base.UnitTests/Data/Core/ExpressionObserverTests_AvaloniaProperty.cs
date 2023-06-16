@@ -20,7 +20,7 @@
 ////        public async Task Should_Get_Simple_Property_Value()
 ////        {
 ////            var data = new Class1();
-////            var target = ExpressionObserver.Create(data, o => o.Foo);
+////            var target = UntypedBindingExpression.Create(data, o => o.Foo);
 ////            var result = await target.Take(1);
 
 ////            Assert.Equal("foo", result);
@@ -32,7 +32,7 @@
 ////        public async Task Should_Get_Simple_ClrProperty_Value()
 ////        {
 ////            var data = new Class1();
-////            var target = ExpressionObserver.Create(data, o => o.ClrProperty);
+////            var target = UntypedBindingExpression.Create(data, o => o.ClrProperty);
 ////            var result = await target.Take(1);
 
 ////            Assert.Equal("clr-property", result);
@@ -42,7 +42,7 @@
 ////        public void Should_Track_Simple_Property_Value()
 ////        {
 ////            var data = new Class1();
-////            var target = ExpressionObserver.Create(data, o => o.Foo);
+////            var target = UntypedBindingExpression.Create(data, o => o.Foo);
 ////            var result = new List<object>();
 
 ////            var sub = target.Subscribe(x => result.Add(x));
@@ -58,10 +58,10 @@
 ////        [Fact]
 ////        public void Should_Not_Keep_Source_Alive()
 ////        {
-////            Func<Tuple<ExpressionObserver, WeakReference>> run = () =>
+////            Func<Tuple<UntypedBindingExpression, WeakReference>> run = () =>
 ////            {
 ////                var source = new Class1();
-////                var target = ExpressionObserver.Create(source, o => o.Foo);
+////                var target = UntypedBindingExpression.Create(source, o => o.Foo);
 ////                return Tuple.Create(target, new WeakReference(source));
 ////            };
 

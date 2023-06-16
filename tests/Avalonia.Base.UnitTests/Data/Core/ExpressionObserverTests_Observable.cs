@@ -20,7 +20,7 @@
 ////            {
 ////                var source = new BehaviorSubject<string>("foo");
 ////                var data = new { Foo = source };
-////                var target = ExpressionObserver.Create(data, o => o.Foo);
+////                var target = UntypedBindingExpression.Create(data, o => o.Foo);
 ////                var result = new List<object>();
 
 ////                var sub = target.Subscribe(x => result.Add(x));
@@ -40,7 +40,7 @@
 ////            {
 ////                var source = new BehaviorSubject<string>("foo");
 ////                var data = new { Foo = source };
-////                var target = ExpressionObserver.Create(data, o => o.Foo.StreamBinding());
+////                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding());
 ////                var result = new List<object>();
 
 ////                var sub = target.Subscribe(x => result.Add(x));
@@ -59,7 +59,7 @@
 ////            using (var sync = UnitTestSynchronizationContext.Begin())
 ////            {
 ////                var data = new Class1();
-////                var target = ExpressionObserver.Create(data, o => o.Next.StreamBinding().Foo);
+////                var target = UntypedBindingExpression.Create(data, o => o.Next.StreamBinding().Foo);
 ////                var result = new List<object>();
 
 ////                var sub = target.Subscribe(x => result.Add(x));
@@ -84,7 +84,7 @@
 ////            {
 ////                var source = new BehaviorSubject<string>("foo");
 ////                var data = new { Foo = source };
-////                var target = ExpressionObserver.Create(data, o => o.Foo.StreamBinding(), true);
+////                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding(), true);
 ////                var result = new List<object>();
 
 ////                var sub = target.Subscribe(x => result.Add(x));
@@ -106,7 +106,7 @@
 ////            {
 ////                var data1 = new Class1();
 ////                var data2 = new Class2("foo");
-////                var target = ExpressionObserver.Create(data1, o => o.Next.StreamBinding().Foo, true);
+////                var target = UntypedBindingExpression.Create(data1, o => o.Next.StreamBinding().Foo, true);
 ////                var result = new List<object>();
 
 ////                var sub = target.Subscribe(x => result.Add(x));
@@ -135,7 +135,7 @@
 ////            using (var sync = UnitTestSynchronizationContext.Begin())
 ////            {
 ////                var data = new NotStreamable();
-////                var target = ExpressionObserver.Create(data, o => o.StreamBinding());
+////                var target = UntypedBindingExpression.Create(data, o => o.StreamBinding());
 ////                var result = new List<object>();
 
 ////                var sub = target.Subscribe(x => result.Add(x));
@@ -163,7 +163,7 @@
 ////            {
 ////                var source = new BehaviorSubject<int>(1);
 ////                var data = new { Foo = source };
-////                var target = ExpressionObserver.Create(data, o => o.Foo.StreamBinding());
+////                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding());
 ////                var result = new List<int>();
 
 ////                var sub = target.Subscribe(x => result.Add((int)x));
