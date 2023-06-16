@@ -41,30 +41,88 @@ namespace Avalonia.Base.UnitTests.Data.Core
         [Fact]
         public void Should_Set_Value_On_Simple_Property_Chain()
         {
-            var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo.Bar, typeof(object));
+            var data = new Person { Pet = new Dog { Name = "Fido" } };
+            var target = UntypedBindingExpression.Create(data, o => o.Pet.Name, typeof(object));
 
             using (target.Subscribe(_ => { }))
             {
-                target.SetValue("foo");
+                target.SetValue("Rover");
             }
 
-            Assert.Equal("foo", data.Foo.Bar);
+            Assert.Equal("Rover", data.Pet.Name);
         }
 
         [Fact]
         public void Should_Not_Try_To_Set_Value_On_Broken_Chain()
         {
-            var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo.Bar, typeof(object));
+            var data = new Person { Pet = new Dog { Name = "Fido" } };
+            var target = UntypedBindingExpression.Create(data, o => o.Pet.Name, typeof(object));
 
             // Ensure the UntypedBindingExpression's subscriptions are kept active.
             using (target.OfType<string>().Subscribe(x => { }))
             {
-                data.Foo = null;
-                Assert.False(target.SetValue("foo"));
+                data.Pet = null;
+                Assert.False(target.SetValue("Rover"));
             }
         }
+
+        ////[Fact]
+        ////public void SetValue_Should_Return_False_For_Missing_Property()
+        ////{
+        ////    var data = new Class1 { Next = new WithoutBar() };
+        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
+
+        ////    using (target.Subscribe(_ => { }))
+        ////    {
+        ////        Assert.False(target.SetValue("baz"));
+        ////    }
+
+        ////    GC.KeepAlive(data);
+        ////}
+
+        ////[Fact]
+        ////public void SetValue_Should_Notify_New_Value_With_Inpc()
+        ////{
+        ////    var data = new Class1();
+        ////    var target = UntypedBindingExpression.Create(data, o => o.Foo);
+        ////    var result = new List<object>();
+
+        ////    target.Subscribe(x => result.Add(x));
+        ////    target.SetValue("bar");
+
+        ////    Assert.Equal(new[] { null, "bar" }, result);
+
+        ////    GC.KeepAlive(data);
+        ////}
+
+        ////[Fact]
+        ////public void SetValue_Should_Notify_New_Value_Without_Inpc()
+        ////{
+        ////    var data = new Class1();
+        ////    var target = UntypedBindingExpression.Create(data, o => o.Bar);
+        ////    var result = new List<object>();
+
+        ////    target.Subscribe(x => result.Add(x));
+        ////    target.SetValue("bar");
+
+        ////    Assert.Equal(new[] { null, "bar" }, result);
+
+        ////    GC.KeepAlive(data);
+        ////}
+
+        ////[Fact]
+        ////public void SetValue_Should_Return_False_For_Missing_Object()
+        ////{
+        ////    var data = new Class1();
+        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
+
+        ////    using (target.Subscribe(_ => { }))
+        ////    {
+        ////        Assert.False(target.SetValue("baz"));
+        ////    }
+
+        ////    GC.KeepAlive(data);
+        ////}
 
         /// <summary>
         /// Test for #831 - Bound properties are incorrectly updated when changing tab items.
@@ -76,46 +134,89 @@ namespace Avalonia.Base.UnitTests.Data.Core
         [Fact]
         public void Pushing_Null_To_RootObservable_Updates_Leaf_Node()
         {
-            var data = new Class1 { Foo = new Class2 { Bar = "bar" } };
-            var rootObservable = new BehaviorSubject<Class1>(data);
-            var target = UntypedBindingExpression.Create(rootObservable, o => o.Foo.Bar, typeof(object));
+            var data = new Person { Pet = new Dog { Name = "Fido" } };
+            var rootObservable = new BehaviorSubject<Person>(data);
+            var target = UntypedBindingExpression.Create(rootObservable, o => o.Pet.Name, typeof(object));
 
             using (target.Subscribe(_ => { }))
             {
                 rootObservable.OnNext(null);
-                target.SetValue("baz");
-                Assert.Equal("bar", data.Foo.Bar);
+                target.SetValue("Rover");
+                Assert.Equal("Fido", data.Pet.Name);
             }
         }
 
-        private class Class1 : NotifyingBase
+        private interface IAnimal
         {
-            private Class2 _foo;
+            string Name { get; }
+            int PropertyChangedSubscriptionCount { get; }
+        }
 
-            public Class2 Foo
+        private class Person : NotifyingBase
+        {
+            private string _firstName;
+            private string _lastName;
+            private IAnimal _pet;
+
+            public string FirstName
             {
-                get { return _foo; }
+                get { return _firstName; }
                 set
                 {
-                    _foo = value;
-                    RaisePropertyChanged(nameof(Foo));
+                    _firstName = value;
+                    RaisePropertyChanged(nameof(FirstName));
+                }
+            }
+
+            public string LastName
+            {
+                get { return _lastName; }
+                set { _lastName = value; }
+            }
+
+            public IAnimal Pet
+            {
+                get { return _pet; }
+                set
+                {
+                    _pet = value;
+                    RaisePropertyChanged(nameof(Pet));
                 }
             }
         }
 
-        private class Class2 : NotifyingBase
+        private class Dog : NotifyingBase, IAnimal
         {
-            private string _bar;
+            private string _name;
+            private IAnimal _next;
 
-            public string Bar
+            public string Name
             {
-                get { return _bar; }
+                get { return _name; }
                 set
                 {
-                    _bar = value;
-                    RaisePropertyChanged(nameof(Bar));
+                    _name = value;
+                    RaisePropertyChanged(nameof(Name));
+                }
+            }
+
+            public IAnimal Next
+            {
+                get { return _next; }
+                set
+                {
+                    _next = value;
+                    RaisePropertyChanged(nameof(Next));
                 }
             }
         }
+
+        private class Class3 : Person
+        {
+        }
+
+        //private class WithoutBar : NotifyingBase, IAnimal
+        //{
+        //}
     }
 }

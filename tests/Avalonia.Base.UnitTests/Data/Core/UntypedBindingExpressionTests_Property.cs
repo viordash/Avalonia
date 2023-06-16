@@ -439,64 +439,6 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////}
 
         ////[Fact]
-        ////public void SetValue_Should_Return_False_For_Missing_Property()
-        ////{
-        ////    var data = new Class1 { Next = new WithoutBar() };
-        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
-
-        ////    using (target.Subscribe(_ => { }))
-        ////    {
-        ////        Assert.False(target.SetValue("baz"));
-        ////    }
-
-        ////    GC.KeepAlive(data);
-        ////}
-
-        ////[Fact]
-        ////public void SetValue_Should_Notify_New_Value_With_Inpc()
-        ////{
-        ////    var data = new Class1();
-        ////    var target = UntypedBindingExpression.Create(data, o => o.Foo);
-        ////    var result = new List<object>();
-
-        ////    target.Subscribe(x => result.Add(x));
-        ////    target.SetValue("bar");
-
-        ////    Assert.Equal(new[] { null, "bar" }, result);
-
-        ////    GC.KeepAlive(data);
-        ////}
-
-        ////[Fact]
-        ////public void SetValue_Should_Notify_New_Value_Without_Inpc()
-        ////{
-        ////    var data = new Class1();
-        ////    var target = UntypedBindingExpression.Create(data, o => o.Bar);
-        ////    var result = new List<object>();
-
-        ////    target.Subscribe(x => result.Add(x));
-        ////    target.SetValue("bar");
-
-        ////    Assert.Equal(new[] { null, "bar" }, result);
-
-        ////    GC.KeepAlive(data);
-        ////}
-
-        ////[Fact]
-        ////public void SetValue_Should_Return_False_For_Missing_Object()
-        ////{
-        ////    var data = new Class1();
-        ////    var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
-
-        ////    using (target.Subscribe(_ => { }))
-        ////    {
-        ////        Assert.False(target.SetValue("baz"));
-        ////    }
-
-        ////    GC.KeepAlive(data);
-        ////}
-
-        ////[Fact]
         ////public void Can_Replace_Root()
         ////{
         ////    var first = new Class1 { Foo = "foo" };
