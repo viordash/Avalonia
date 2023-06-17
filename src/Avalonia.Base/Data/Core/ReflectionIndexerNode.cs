@@ -30,7 +30,7 @@ internal class ReflectionIndexerNode : ExpressionNode
     {
         if (Source is null)
             return false;
-        _setDelegate.DynamicInvoke(value);
+        _setDelegate.DynamicInvoke(Source, value);
         return true;
     }
 

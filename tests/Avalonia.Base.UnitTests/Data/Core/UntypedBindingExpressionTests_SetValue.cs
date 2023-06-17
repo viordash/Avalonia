@@ -45,7 +45,10 @@ namespace Avalonia.Base.UnitTests.Data.Core
             var data = new { Foo = new[] { "foo" } };
             var target = UntypedBindingExpression.Create(data, o => o.Foo[0], typeof(object));
 
-            target.SetValue("bar");
+            using (target.Subscribe(_ => { }))
+            {
+                target.SetValue("bar");
+            }
 
             Assert.Equal("bar", data.Foo[0]);
 
