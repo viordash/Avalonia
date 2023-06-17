@@ -26,6 +26,14 @@ internal class ReflectionIndexerNode : ExpressionNode
         UpdateValue(newSource);
     }
 
+    public override bool WriteValueToSource(object? value)
+    {
+        if (Source is null)
+            return false;
+        _setDelegate.DynamicInvoke(value);
+        return true;
+    }
+
     private void UpdateValue(object? source)
     {
         if (source is not null)

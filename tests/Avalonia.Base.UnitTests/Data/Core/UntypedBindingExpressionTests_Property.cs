@@ -27,19 +27,6 @@ namespace Avalonia.Base.UnitTests.Data.Core
             GC.KeepAlive(data);
         }
 
-        ////[Fact]
-        ////public void Should_Get_Simple_Property_Value_Type()
-        ////{
-        ////    var data = new { Foo = "foo" };
-        ////    var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
-
-        ////    target.Subscribe(_ => { });
-
-        ////    Assert.Equal(typeof(string), target.ResultType);
-
-        ////    GC.KeepAlive(data);
-        ////}
-
         [Fact]
         public async Task Should_Get_Simple_Property_Value_Null()
         {

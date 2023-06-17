@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -10,6 +11,7 @@ namespace Avalonia.Data.Core.Parsers;
 [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
 internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
 {
+    private static readonly PropertyInfo AvaloniaObjectIndexer;
     private static readonly string IndexerGetterName = "get_Item";
     private const string MultiDimensionalArrayGetterMethodName = "Get";
     private readonly LambdaExpression _rootExpression;
@@ -21,6 +23,11 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         _rootExpression = expression;
     }
 
+    static UntypedBindingExpressionVisitor()
+    {
+        AvaloniaObjectIndexer = typeof(AvaloniaObject).GetProperty("Item", new[] { typeof(AvaloniaProperty) })!;
+    }
+
     public static ExpressionNode[] BuildNodes<TOut>(Expression<Func<TIn, TOut>> expression)
     {
         var visitor = new UntypedBindingExpressionVisitor<TIn>(expression);
@@ -30,22 +37,29 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
 
     protected override Expression VisitBinary(BinaryExpression node)
     {
-        var result = base.VisitBinary(node);
+        // Indexers require more work since the compiler doesn't generate IndexExpressions:
+        // they weren't in System.Linq.Expressions v1 and so must be generated manually.
+        if (node.NodeType == ExpressionType.ArrayIndex)
+            return Visit(Expression.MakeIndex(node.Left, null, new[] { node.Right }));
 
-        EnsureHead(node.Left);
-        _head = node;
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
 
-        switch (node.NodeType)
+    protected override Expression VisitIndex(IndexExpression node)
+    {
+        Visit(node.Object);
+
+        if (node.Indexer == AvaloniaObjectIndexer)
         {
-            case ExpressionType.ArrayIndex:
-                var index = GetValue<int>(node.Right);
-                _nodes.Add(new ListIndexerNode(index));
-                break;
-            default:
-                throw new InvalidOperationException($"Unsupported binary expresion: {node.NodeType}.");
+            var property = GetValue<AvaloniaProperty>(node.Arguments[0]);
+            _nodes.Add(new AvaloniaPropertyAccessorNode(property));
+        }
+        else
+        {
+            _nodes.Add(new ReflectionIndexerNode(node));
         }
 
-        return result;
+        return node;
     }
 
     protected override Expression VisitMember(MemberExpression node)
@@ -63,7 +77,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
                     _nodes.Add(new PropertyAccessorNode(node.Member.Name));
                     break;
                 default:
-                    throw new NotSupportedException($"Unsupported MemberExpression: {node}.");
+                    throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
             }
         }
 
@@ -72,38 +86,22 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
     {
-        var result = base.VisitMethodCall(node);
         var method = node.Method;
 
-        EnsureHead(node.Object);
-
-        if (method.Name == IndexerGetterName)
+        if (method.Name == IndexerGetterName && node.Object is not null)
         {
-            if (method.DeclaringType == typeof(AvaloniaObject) &&
-                method.GetParameters() is { } parameters &&
-                parameters.Length == 1 &&
-                parameters[0].ParameterType == typeof(AvaloniaProperty) &&
-                typeof(AvaloniaProperty).IsAssignableFrom(node.Arguments[0].Type))
-            {
-                var property = GetValue<AvaloniaProperty>(node.Arguments[0]);
-                _nodes.Add(new AvaloniaPropertyAccessorNode(property));
-            }
-            else if (typeof(IList).IsAssignableFrom(method.DeclaringType) &&
-                     node.Arguments.Count == 1 &&
-                     node.Arguments[0].Type == typeof(int))
-            {
-                var index = GetValue<int>(node.Arguments[0]);
-                _nodes.Add(new ListIndexerNode(index));
-            }
+            var property = TryGetPropertyFromMethod(method);
+            return Visit(Expression.MakeIndex(node.Object, property, node.Arguments));
         }
         else if (method.Name == MultiDimensionalArrayGetterMethodName &&
                  node.Object is not null)
         {
             var expression = Expression.MakeIndex(node.Object, null, node.Arguments);
             _nodes.Add(new ReflectionIndexerNode(expression));
+            return node;
         }
 
-        return result;
+        throw new ExpressionParseException(0, $"Invalid method call in binding expression: '{node.Method.DeclaringType!.AssemblyQualifiedName}.{node.Method.Name}'.");
     }
 
     protected override Expression VisitParameter(ParameterExpression node)
@@ -132,5 +130,11 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         if (expr is ConstantExpression constant)
             return (T)constant.Value!;
         return Expression.Lambda<Func<T>>(expr).Compile(preferInterpretation: true)();
+    }
+
+    private static PropertyInfo? TryGetPropertyFromMethod(MethodInfo method)
+    {
+        var type = method.DeclaringType;
+        return type?.GetRuntimeProperties().FirstOrDefault(prop => prop.GetMethod == method);
     }
 }
