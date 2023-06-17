@@ -11,6 +11,7 @@ namespace Avalonia.Data.Core.Parsers;
 internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
 {
     private static readonly string IndexerGetterName = "get_Item";
+    private const string MultiDimensionalArrayGetterMethodName = "Get";
     private readonly LambdaExpression _rootExpression;
     private readonly List<ExpressionNode> _nodes = new();
     private Expression? _head;
@@ -94,6 +95,12 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
                 var index = GetValue<int>(node.Arguments[0]);
                 _nodes.Add(new ListIndexerNode(index));
             }
+        }
+        else if (method.Name == MultiDimensionalArrayGetterMethodName &&
+                 node.Object is not null)
+        {
+            var expression = Expression.MakeIndex(node.Object, null, node.Arguments);
+            _nodes.Add(new ReflectionIndexerNode(expression));
         }
 
         return result;
