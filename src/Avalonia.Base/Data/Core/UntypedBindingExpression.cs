@@ -115,6 +115,9 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         return new UntypedBindingExpression(source, nodes, targetType);
     }
 
+    /// <summary>
+    /// Implements the disposable returned by <see cref="IObservable{T}.Subscribe(IObserver{T})"/>.
+    /// </summary>
     void IDisposable.Dispose()
     {
         if (_observer is null)
@@ -134,6 +137,12 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         return this;
     }
 
+    /// <summary>
+    /// Called by an <see cref="ExpressionNode"/> belonging to this binding when its
+    /// <see cref="ExpressionNode.Value"/> changes.
+    /// </summary>
+    /// <param name="nodeIndex">The <see cref="ExpressionNode.Index"/>.</param>
+    /// <param name="value">The <see cref="ExpressionNode.Value"/>.</param>
     internal void OnNodeValueChanged(int nodeIndex, object? value)
     {
         if (nodeIndex == _nodes.Length - 1)
@@ -173,7 +182,7 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         _sourceSubscription = null;
 
         foreach (var node in _nodes)
-            node.SetSource(null);
+            node.Reset();
     }
 
     private void PublishValue()
