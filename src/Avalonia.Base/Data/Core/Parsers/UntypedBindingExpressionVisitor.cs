@@ -50,13 +50,11 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         if (node.Indexer == AvaloniaObjectIndexer)
         {
             var property = GetValue<AvaloniaProperty>(node.Arguments[0]);
-            Add(node.Object, node, new AvaloniaPropertyAccessorNode(property));
-            return node;
+            return Add(node.Object, node, new AvaloniaPropertyAccessorNode(property));
         }
         else
         {
-            Add(node.Object, node, new ReflectionIndexerNode(node));
-            return node;
+            return Add(node.Object, node, new ReflectionIndexerNode(node));
         }
     }
 
@@ -65,8 +63,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         switch (node.Member.MemberType)
         {
             case MemberTypes.Property:
-                Add(node.Expression, node, new PropertyAccessorNode(node.Member.Name));
-                return node;
+                return Add(node.Expression, node, new PropertyAccessorNode(node.Member.Name));
             default:
                 throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
         }
@@ -85,29 +82,113 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
                  node.Object is not null)
         {
             var expression = Expression.MakeIndex(node.Object, null, node.Arguments);
-            Add(node.Object, node, new ReflectionIndexerNode(expression));
-            return node;
+            return Add(node.Object, node, new ReflectionIndexerNode(expression));
         }
 
-        throw new ExpressionParseException(0, $"Invalid method call in binding expression: '{node.Method.DeclaringType!.AssemblyQualifiedName}.{node.Method.Name}'.");
+        throw new ExpressionParseException(0, $"Invalid method call in binding expression: '{node.Method.DeclaringType}.{node.Method.Name}'.");
     }
 
     protected override Expression VisitParameter(ParameterExpression node)
     {
-        if (node == _rootExpression.Parameters[0])
+        if (node == _rootExpression.Parameters[0] && _head is null)
             _head = node;
         return base.VisitParameter(node);
     }
-
+    
     protected override Expression VisitUnary(UnaryExpression node)
     {
-        var result = base.VisitUnary(node);
-        if (node.Operand == _head)
-            _head = node;
-        return result;
+        if (node.NodeType == ExpressionType.Not && node.Type == typeof(bool))
+        {
+            return Add(node.Operand, node, new LogicalNotNode());
+        }
+        else if (node.NodeType == ExpressionType.Convert)
+        {
+            if (node.Operand.Type.IsAssignableFrom(node.Type))
+            {
+                // Ignore inheritance casts 
+                return _head = node;
+            }
+        }
+        else if (node.NodeType == ExpressionType.TypeAs)
+        {
+            // Ignore as operator.
+            return _head = node;
+        }
+
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
     }
-    
-    private void Add(Expression? instance, Expression expression, ExpressionNode node)
+
+    protected override Expression VisitBlock(BlockExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override CatchBlock VisitCatchBlock(CatchBlock node)
+    {
+        throw new ExpressionParseException(0, $"Catch blocks are not allowed in binding expressions.");
+    }
+
+    protected override Expression VisitConditional(ConditionalExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override Expression VisitDynamic(DynamicExpression node)
+    {
+        throw new ExpressionParseException(0, $"Dynamic expressions are not allowed in binding expressions.");
+    }
+
+    protected override ElementInit VisitElementInit(ElementInit node)
+    {
+        throw new ExpressionParseException(0, $"Element init expressions are not valid in a binding expression.");
+    }
+
+    protected override Expression VisitGoto(GotoExpression node)
+    {
+        throw new ExpressionParseException(0, $"Goto expressions not supported in binding expressions.");
+    }
+
+    protected override Expression VisitInvocation(InvocationExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override Expression VisitLabel(LabelExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override Expression VisitListInit(ListInitExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override Expression VisitLoop(LoopExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
+    {
+        throw new ExpressionParseException(0, $"Member assignments not supported in binding expressions.");
+    }
+
+    protected override Expression VisitSwitch(SwitchExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override Expression VisitTry(TryExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    protected override Expression VisitTypeBinary(TypeBinaryExpression node)
+    {
+        throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
+    }
+
+    private Expression Add(Expression? instance, Expression expression, ExpressionNode node)
     {
         var visited = Visit(instance);
         if (visited != _head)
@@ -115,7 +196,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
                 0, 
                 $"Unable to parse '{expression}': expected an instance of '{_head}' but got '{visited}'.");
         _nodes.Add(node);
-        _head = expression;
+        return _head = expression;
     }
 
     private static T GetValue<T>(Expression expr)
