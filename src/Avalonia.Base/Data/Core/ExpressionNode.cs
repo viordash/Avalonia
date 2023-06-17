@@ -40,9 +40,10 @@ internal abstract class ExpressionNode
     {
         get
         {
-            if (_value?.TryGetTarget(out var value) == true)
-                return value;
-            return AvaloniaProperty.UnsetValue;
+            if (_value is null)
+                return AvaloniaProperty.UnsetValue;
+            _value.TryGetTarget(out var value);
+            return value;
         }
     }
 
