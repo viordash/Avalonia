@@ -35,6 +35,15 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
             };
         }
 
+        public override InstancedBinding? Initiate(
+            AvaloniaObject target,
+            AvaloniaProperty? targetProperty,
+            object? anchor = null,
+            bool enableDataValidation = false)
+        {
+            throw new NotImplementedException();
+        }
+
         ////private protected override ExpressionObserver CreateExpressionObserver(AvaloniaObject target, AvaloniaProperty? targetProperty, object? anchor, bool enableDataValidation)
         ////{
         ////    if (Source != null)

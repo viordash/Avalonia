@@ -2,10 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Data.Converters;
-using Avalonia.Data.Core;
-using Avalonia.LogicalTree;
 using Avalonia.Reactive;
-using Avalonia.VisualTree;
 
 namespace Avalonia.Data
 {
@@ -71,55 +68,11 @@ namespace Avalonia.Data
 
         /// <inheritdoc/>
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimmingMessages.TypeConversionSupressWarningMessage)]
-        public InstancedBinding? Initiate(
+        public abstract InstancedBinding? Initiate(
             AvaloniaObject target,
             AvaloniaProperty? targetProperty,
             object? anchor = null,
-            bool enableDataValidation = false)
-        {
-            _ = target ?? throw new ArgumentNullException(nameof(target));
-
-            anchor = anchor ?? DefaultAnchor?.Target;
-
-            enableDataValidation = enableDataValidation && Priority == BindingPriority.LocalValue;
-
-            ////var observer = CreateExpressionObserver(target, targetProperty, anchor, enableDataValidation);
-
-            ////var fallback = FallbackValue;
-
-            ////// If we're binding to DataContext and our fallback is UnsetValue then override
-            ////// the fallback value to null, as broken bindings to DataContext must reset the
-            ////// DataContext in order to not propagate incorrect DataContexts to child controls.
-            ////// See Avalonia.Markup.UnitTests.Data.DataContext_Binding_Should_Produce_Correct_Results.
-            ////if (targetProperty == StyledElement.DataContextProperty && fallback == AvaloniaProperty.UnsetValue)
-            ////{
-            ////    fallback = null;
-            ////}
-
-            ////var converter = Converter;
-            ////var targetType = targetProperty?.PropertyType ?? typeof(object);
-
-            ////// We only respect `StringFormat` if the type of the property we're assigning to will
-            ////// accept a string. Note that this is slightly different to WPF in that WPF only applies
-            ////// `StringFormat` for target type `string` (not `object`).
-            ////if (!string.IsNullOrWhiteSpace(StringFormat) &&
-            ////    (targetType == typeof(string) || targetType == typeof(object)))
-            ////{
-            ////    converter = new StringFormatValueConverter(StringFormat!, converter);
-            ////}
-
-            throw new NotImplementedException();
-            ////var subject = new BindingExpression(
-            ////    observer,
-            ////    targetType,
-            ////    fallback,
-            ////    TargetNullValue,
-            ////    converter ?? DefaultValueConverter.Instance,
-            ////    ConverterParameter,
-            ////    Priority);
-
-            ////return new InstancedBinding(subject, Mode, Priority);
-        }
+            bool enableDataValidation = false);
 
         ////private protected ExpressionObserver CreateDataContextObserver(
         ////    AvaloniaObject target,

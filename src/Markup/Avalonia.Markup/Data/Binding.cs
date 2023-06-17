@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Data.Core;
 using Avalonia.Markup.Parsers;
+using Avalonia.Utilities;
 
 namespace Avalonia.Data
 {
@@ -54,6 +55,39 @@ namespace Avalonia.Data
         /// Gets or sets a function used to resolve types from names in the binding path.
         /// </summary>
         public Func<string?, string, Type>? TypeResolver { get; set; }
+
+        public override InstancedBinding? Initiate(
+            AvaloniaObject target,
+            AvaloniaProperty? targetProperty,
+            object? anchor = null,
+            bool enableDataValidation = false)
+        {
+            ExpressionNode[] nodes;
+
+            if (!string.IsNullOrEmpty(Path))
+            {
+                var reader = new CharacterReader(Path.AsSpan());
+                var (astNodes, sourceMode) = BindingExpressionGrammar.Parse(ref reader);
+                nodes = ExpressionNodeFactory.Create(astNodes);
+            }
+            else
+            {
+                nodes = Array.Empty<ExpressionNode>();
+            }
+
+            var expression = new UntypedBindingExpression(
+                Source ?? target,
+                nodes,
+                targetProperty?.PropertyType ?? typeof(object));
+            return new InstancedBinding(expression, Mode, Priority);
+        }
+
+        private INameScope? GetNameScope()
+        {
+            INameScope? result = null;
+            NameScope?.TryGetTarget(out result);
+            return result;
+        }
 
         ////private protected override ExpressionObserver CreateExpressionObserver(AvaloniaObject target, AvaloniaProperty? targetProperty, object? anchor, bool enableDataValidation)
         ////{
