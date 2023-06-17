@@ -47,41 +47,29 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
 
     protected override Expression VisitIndex(IndexExpression node)
     {
-        Visit(node.Object);
-
         if (node.Indexer == AvaloniaObjectIndexer)
         {
             var property = GetValue<AvaloniaProperty>(node.Arguments[0]);
-            _nodes.Add(new AvaloniaPropertyAccessorNode(property));
+            Add(node.Object, node, new AvaloniaPropertyAccessorNode(property));
+            return node;
         }
         else
         {
-            _nodes.Add(new ReflectionIndexerNode(node));
+            Add(node.Object, node, new ReflectionIndexerNode(node));
+            return node;
         }
-
-        return node;
     }
 
     protected override Expression VisitMember(MemberExpression node)
     {
-        var result = base.VisitMember(node);
-
-        EnsureHead(node.Expression);
-        _head = node;
-
-        if (node.Expression is not null)
+        switch (node.Member.MemberType)
         {
-            switch (node.Member.MemberType)
-            {
-                case MemberTypes.Property:
-                    _nodes.Add(new PropertyAccessorNode(node.Member.Name));
-                    break;
-                default:
-                    throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
-            }
+            case MemberTypes.Property:
+                Add(node.Expression, node, new PropertyAccessorNode(node.Member.Name));
+                return node;
+            default:
+                throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
         }
-
-        return result;
     }
 
     protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -97,7 +85,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
                  node.Object is not null)
         {
             var expression = Expression.MakeIndex(node.Object, null, node.Arguments);
-            _nodes.Add(new ReflectionIndexerNode(expression));
+            Add(node.Object, node, new ReflectionIndexerNode(expression));
             return node;
         }
 
@@ -118,11 +106,16 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
             _head = node;
         return result;
     }
-
-    private void EnsureHead(Expression? e)
+    
+    private void Add(Expression? instance, Expression expression, ExpressionNode node)
     {
-        if (e != _head)
-            throw new NotSupportedException($"Unable to parse expression: {e}");
+        var visited = Visit(instance);
+        if (visited != _head)
+            throw new ExpressionParseException(
+                0, 
+                $"Unable to parse '{expression}': expected an instance of '{_head}' but got '{visited}'.");
+        _nodes.Add(node);
+        _head = expression;
     }
 
     private static T GetValue<T>(Expression expr)
