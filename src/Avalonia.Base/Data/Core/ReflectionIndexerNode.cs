@@ -1,9 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
 
 namespace Avalonia.Data.Core;
 
-internal class ReflectionIndexerNode : ExpressionNode
+internal sealed class ReflectionIndexerNode : CollectionNodeBase
 {
     private readonly ParameterExpression _parameter;
     private readonly IndexExpression _expression;
@@ -23,7 +24,37 @@ internal class ReflectionIndexerNode : ExpressionNode
 
     protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
+        Unsubscribe(oldSource);
+        Subscribe(newSource);
         UpdateValue(newSource);
+    }
+
+    protected override bool ShouldUpdate(object? sender, PropertyChangedEventArgs e)
+    {
+        return _expression.Indexer == null || _expression.Indexer.Name == e.PropertyName;
+    }
+
+    protected override int? TryGetFirstArgumentAsInt()
+    {
+        var source = Source;
+        if (source is null)
+            return null;
+        return _firstArgumentDelegate.DynamicInvoke(source) as int?;
+    }
+
+    protected override void UpdateValue(object? source)
+    {
+        try
+        {
+            if (source is not null)
+                SetValue(_getDelegate.DynamicInvoke(source));
+            else
+                SetValue(null);
+        }
+        catch (Exception e)
+        {
+            SetError(e);
+        }
     }
 
     public override bool WriteValueToSource(object? value)
@@ -32,13 +63,5 @@ internal class ReflectionIndexerNode : ExpressionNode
             return false;
         _setDelegate.DynamicInvoke(Source, value);
         return true;
-    }
-
-    private void UpdateValue(object? source)
-    {
-        if (source is not null)
-            SetValue(_getDelegate.DynamicInvoke(source));
-        else
-            SetValue(null);
     }
 }
