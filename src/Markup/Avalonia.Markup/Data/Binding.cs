@@ -63,17 +63,13 @@ namespace Avalonia.Data
             object? anchor = null,
             bool enableDataValidation = false)
         {
-            ExpressionNode[] nodes;
+            var nodes = Array.Empty<ExpressionNode>();
 
             if (!string.IsNullOrEmpty(Path))
             {
                 var reader = new CharacterReader(Path.AsSpan());
                 var (astNodes, sourceMode) = BindingExpressionGrammar.Parse(ref reader);
-                nodes = ExpressionNodeFactory.Create(astNodes);
-            }
-            else
-            {
-                nodes = Array.Empty<ExpressionNode>();
+                nodes = ExpressionNodeFactory.Create(astNodes, TypeResolver, GetNameScope());
             }
 
             var expression = new UntypedBindingExpression(
