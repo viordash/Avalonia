@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Data.Core.ExpressionNodes.Reflection;
 
@@ -13,7 +14,7 @@ namespace Avalonia.Markup.Parsers
     internal static class ExpressionNodeFactory
     {
         [RequiresUnreferencedCode(TrimmingMessages.ReflectionBindingRequiresUnreferencedCodeMessage)]
-        public static ExpressionNode[] Create(
+        public static ExpressionNode[] CreateFromAst(
             IEnumerable<BindingExpressionGrammar.INode> astNodes,
             Func<string?, string, Type>? typeResolver,
             INameScope? nameScope)
@@ -24,7 +25,7 @@ namespace Avalonia.Markup.Parsers
             {
                 ExpressionNode? node = astNode switch
                 {
-                    BindingExpressionGrammar.AncestorNode ancestor => AncestorNode(typeResolver, ancestor),
+                    BindingExpressionGrammar.AncestorNode ancestor => LogicalAncestorNode(typeResolver, ancestor),
                     BindingExpressionGrammar.NameNode name => new NamedElementNode(nameScope, name.Name),
                     BindingExpressionGrammar.NotNode => new LogicalNotNode(),
                     BindingExpressionGrammar.PropertyNameNode propName => new PluginPropertyAccessorNode(propName.PropertyName),
@@ -38,8 +39,22 @@ namespace Avalonia.Markup.Parsers
 
             return result.ToArray();
         }
+        
+        public static ExpressionNode? CreateRelativeSource(RelativeSource source, Func<string?, string, Type>? typeResolver)
+        {
+            return source.Mode switch
+            {
+                RelativeSourceMode.DataContext => new DataContextNode(),
+                RelativeSourceMode.TemplatedParent => new TemplatedParentNode(),
+                RelativeSourceMode.Self => null,
+                RelativeSourceMode.FindAncestor when source.Tree == TreeType.Logical =>
+                    new LogicalAncestorElementNode(source.AncestorType, source.AncestorLevel),
+                RelativeSourceMode.FindAncestor when source.Tree == TreeType.Visual =>
+                    new VisualAncestorElementNode(source.AncestorType, source.AncestorLevel),
+            };
+        }
 
-        private static LogicalAncestorElementNode AncestorNode(
+        private static LogicalAncestorElementNode LogicalAncestorNode(
             Func<string?, string, Type>? typeResolver,
             BindingExpressionGrammar.AncestorNode ancestor)
         {

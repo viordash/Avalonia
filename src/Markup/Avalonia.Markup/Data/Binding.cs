@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.ExpressionNodes;
@@ -69,8 +70,11 @@ namespace Avalonia.Data
             {
                 var reader = new CharacterReader(Path.AsSpan());
                 var (astNodes, sourceMode) = BindingExpressionGrammar.Parse(ref reader);
-                nodes = ExpressionNodeFactory.Create(astNodes, TypeResolver, GetNameScope());
+                nodes = ExpressionNodeFactory.CreateFromAst(astNodes, TypeResolver, GetNameScope());
             }
+
+            if (CreateSourceNode() is { } sourceNode)
+                nodes = nodes.Prepend(sourceNode).ToArray();
 
             var expression = new UntypedBindingExpression(
                 Source ?? target,
@@ -84,6 +88,24 @@ namespace Avalonia.Data
             INameScope? result = null;
             NameScope?.TryGetTarget(out result);
             return result;
+        }
+
+        private ExpressionNode? CreateSourceNode()
+        {
+            if (Source is not null)
+                return null;
+
+            if (!string.IsNullOrEmpty(ElementName))
+            {
+                var nameScope = GetNameScope() ?? throw new InvalidOperationException(
+                    "Cannot create ElementName binding when NameScope is null");
+                return new NamedElementNode(nameScope, ElementName);
+            }
+
+            if (RelativeSource is not null)
+                return ExpressionNodeFactory.CreateRelativeSource(RelativeSource, TypeResolver);
+
+            return new DataContextNode();
         }
 
         ////private protected override ExpressionObserver CreateExpressionObserver(AvaloniaObject target, AvaloniaProperty? targetProperty, object? anchor, bool enableDataValidation)
