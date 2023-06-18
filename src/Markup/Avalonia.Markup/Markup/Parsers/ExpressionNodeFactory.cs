@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Data.Core;
+using Avalonia.Data.Core.ExpressionNodes;
+using Avalonia.Data.Core.ExpressionNodes.Reflection;
 
 namespace Avalonia.Markup.Parsers
 {
@@ -20,7 +22,7 @@ namespace Avalonia.Markup.Parsers
                 ExpressionNode node = astNode switch
                 {
                     BindingExpressionGrammar.NotNode => new LogicalNotNode(),
-                    BindingExpressionGrammar.PropertyNameNode propName => new PropertyAccessorNode(propName.PropertyName),
+                    BindingExpressionGrammar.PropertyNameNode propName => new PluginPropertyAccessorNode(propName.PropertyName),
                     _ => throw new NotSupportedException($"Unsupported binding expression grammar: {astNode}."),
                 };
 

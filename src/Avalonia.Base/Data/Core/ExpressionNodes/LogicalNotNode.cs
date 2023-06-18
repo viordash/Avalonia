@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace Avalonia.Data.Core;
+namespace Avalonia.Data.Core.ExpressionNodes;
 
 internal class LogicalNotNode : ExpressionNode
 {
@@ -20,8 +20,13 @@ internal class LogicalNotNode : ExpressionNode
             SetError(new InvalidCastException($"Unable to convert '{value}' to bool."));
     }
 
-    private static bool TryConvert(object? value,  out bool result)
+    private static bool TryConvert(object? value, out bool result)
     {
+        if (value is bool b)
+        {
+            result = b;
+            return true;
+        }
         if (value is string s)
         {
             // Special case string for performance.

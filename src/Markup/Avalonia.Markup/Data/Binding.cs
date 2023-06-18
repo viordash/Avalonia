@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Data.Core;
+using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Markup.Parsers;
 using Avalonia.Utilities;
 

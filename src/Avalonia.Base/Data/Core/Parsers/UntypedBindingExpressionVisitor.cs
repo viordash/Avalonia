@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Avalonia.Data.Core.ExpressionNodes;
+using Avalonia.Data.Core.ExpressionNodes.Reflection;
 
 namespace Avalonia.Data.Core.Parsers;
 
@@ -54,7 +56,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         }
         else
         {
-            return Add(node.Object, node, new ReflectionIndexerNode(node));
+            return Add(node.Object, node, new ExpressionTreeIndexerNode(node));
         }
     }
 
@@ -63,7 +65,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         switch (node.Member.MemberType)
         {
             case MemberTypes.Property:
-                return Add(node.Expression, node, new PropertyAccessorNode(node.Member.Name));
+                return Add(node.Expression, node, new PluginPropertyAccessorNode(node.Member.Name));
             default:
                 throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
         }
@@ -82,7 +84,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
                  node.Object is not null)
         {
             var expression = Expression.MakeIndex(node.Object, null, node.Arguments);
-            return Add(node.Object, node, new ReflectionIndexerNode(expression));
+            return Add(node.Object, node, new ExpressionTreeIndexerNode(expression));
         }
 
         throw new ExpressionParseException(0, $"Invalid method call in binding expression: '{node.Method.DeclaringType}.{node.Method.Name}'.");

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-namespace Avalonia.Data.Core;
+namespace Avalonia.Data.Core.ExpressionNodes.Reflection;
 
-internal sealed class ReflectionIndexerNode : CollectionNodeBase
+[RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
+internal sealed class ExpressionTreeIndexerNode : CollectionNodeBase
 {
     private readonly ParameterExpression _parameter;
     private readonly IndexExpression _expression;
@@ -12,7 +14,7 @@ internal sealed class ReflectionIndexerNode : CollectionNodeBase
     private readonly Delegate _getDelegate;
     private readonly Delegate _firstArgumentDelegate;
 
-    public ReflectionIndexerNode(IndexExpression expression)
+    public ExpressionTreeIndexerNode(IndexExpression expression)
     {
         var valueParameter = Expression.Parameter(expression.Type);
         _parameter = Expression.Parameter(expression.Object!.Type);

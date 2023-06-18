@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using Avalonia.Data.Core.ExpressionNodes;
 
 namespace Avalonia.Data.Core.Parsers
 {

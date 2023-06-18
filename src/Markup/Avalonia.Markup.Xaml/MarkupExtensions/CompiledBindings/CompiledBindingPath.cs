@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Data.Core;
+using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Parsers;
 

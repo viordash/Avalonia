@@ -1,6 +1,6 @@
 using System;
 
-namespace Avalonia.Data.Core;
+namespace Avalonia.Data.Core.ExpressionNodes;
 
 /// <summary>
 /// A node in the binding path of an <see cref="UntypedBindingExpression"/>.
@@ -19,7 +19,7 @@ internal abstract class ExpressionNode
     /// Gets the owning <see cref="UntypedBindingExpression"/>.
     /// </summary>
     public UntypedBindingExpression? Owner { get; private set; }
-    
+
     /// <summary>
     /// Gets the source object from which the node will read its value.
     /// </summary>
@@ -88,11 +88,12 @@ internal abstract class ExpressionNode
 
         if (source == AvaloniaProperty.UnsetValue)
             _source = null;
-        
+
         if (source != oldSource)
         {
             _source = new(source);
-            try { OnSourceChanged(oldSource, source); }
+            try
+            { OnSourceChanged(oldSource, source); }
             catch (Exception e) { SetError(e); }
         }
     }
@@ -108,11 +109,19 @@ internal abstract class ExpressionNode
     /// Sets the current value to <see cref="AvaloniaProperty.UnsetValue"/> and notifies the
     /// <see cref="Owner"/> of the error.
     /// </summary>
-    /// <param name="e">The error.</param>
-    protected void SetError(Exception e)
+    /// <param name="message">The error message.</param>
+    protected void SetError(string message)
     {
+        // TODO: Implement
         SetValue(AvaloniaProperty.UnsetValue);
     }
+
+    /// <summary>
+    /// Sets the current value to <see cref="AvaloniaProperty.UnsetValue"/> and notifies the
+    /// <see cref="Owner"/> of the error.
+    /// </summary>
+    /// <param name="e">The error.</param>
+    protected void SetError(Exception e) => SetError(e.Message);
 
     /// <summary>
     /// Sets the current <see cref="Value"/>, notifying the <see cref="Owner"/> if the value

@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
+using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Data.Core.Parsers;
 using Avalonia.Reactive;
 using Avalonia.Utilities;
@@ -16,7 +17,9 @@ namespace Avalonia.Data.Core;
 /// instantiated on an object.
 /// </remarks>
 [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
-internal class UntypedBindingExpression : IObservable<object?>, IDisposable
+internal class UntypedBindingExpression : IObservable<object?>,
+    IObserver<object?>,
+    IDisposable
 {
     private readonly IObservable<object?>? _sourceObservable;
     private readonly WeakReference<object?>? _source;
@@ -136,6 +139,10 @@ internal class UntypedBindingExpression : IObservable<object?>, IDisposable
         Start();
         return this;
     }
+
+    void IObserver<object?>.OnCompleted() { }
+    void IObserver<object?>.OnError(Exception error) { }
+    void IObserver<object?>.OnNext(object? value) => SetValue(value);
 
     /// <summary>
     /// Called by an <see cref="ExpressionNode"/> belonging to this binding when its

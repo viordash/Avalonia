@@ -2,15 +2,15 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Data.Core.Plugins;
 
-namespace Avalonia.Data.Core;
+namespace Avalonia.Data.Core.ExpressionNodes.Reflection;
 
 [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
-internal class PropertyAccessorNode : ExpressionNode
+internal class PluginPropertyAccessorNode : ExpressionNode
 {
     private readonly Action<object?> _onValueChanged;
     private IPropertyAccessor? _accessor;
 
-    public PropertyAccessorNode(string propertyName)
+    public PluginPropertyAccessorNode(string propertyName)
     {
         PropertyName = propertyName;
         _onValueChanged = OnValueChanged;

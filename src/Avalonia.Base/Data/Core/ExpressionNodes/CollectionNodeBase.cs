@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia.Utilities;
 
-namespace Avalonia.Data.Core;
+namespace Avalonia.Data.Core.ExpressionNodes;
 
 internal abstract class CollectionNodeBase : ExpressionNode,
     IWeakEventSubscriber<NotifyCollectionChangedEventArgs>,
@@ -52,12 +52,12 @@ internal abstract class CollectionNodeBase : ExpressionNode,
             {
                 NotifyCollectionChangedAction.Add => index >= e.NewStartingIndex,
                 NotifyCollectionChangedAction.Remove => index >= e.OldStartingIndex,
-                NotifyCollectionChangedAction.Replace => 
+                NotifyCollectionChangedAction.Replace =>
                     index >= e.NewStartingIndex &&
                     index < e.NewStartingIndex + e.NewItems!.Count,
-                NotifyCollectionChangedAction.Move => 
-                    (index >= e.NewStartingIndex && index < e.NewStartingIndex + e.NewItems!.Count) ||
-                    (index >= e.OldStartingIndex && index < e.OldStartingIndex + e.OldItems!.Count),
+                NotifyCollectionChangedAction.Move =>
+                    index >= e.NewStartingIndex && index < e.NewStartingIndex + e.NewItems!.Count ||
+                    index >= e.OldStartingIndex && index < e.OldStartingIndex + e.OldItems!.Count,
                 _ => true,
             };
         }
