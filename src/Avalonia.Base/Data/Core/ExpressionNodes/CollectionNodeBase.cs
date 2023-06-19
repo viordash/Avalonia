@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia.Utilities;
@@ -12,13 +13,13 @@ internal abstract class CollectionNodeBase : ExpressionNode,
     void IWeakEventSubscriber<NotifyCollectionChangedEventArgs>.OnEvent(object? sender, WeakEvent ev, NotifyCollectionChangedEventArgs e)
     {
         if (ShouldUpdate(sender, e))
-            UpdateValue(sender);
+            UpdateValueOrSetError(sender);
     }
 
     void IWeakEventSubscriber<PropertyChangedEventArgs>.OnEvent(object? sender, WeakEvent ev, PropertyChangedEventArgs e)
     {
         if (ShouldUpdate(sender, e))
-            UpdateValue(sender);
+            UpdateValueOrSetError(sender);
     }
 
     protected override void OnSourceChanged(object? oldSource, object? newSource)
@@ -71,5 +72,11 @@ internal abstract class CollectionNodeBase : ExpressionNode,
             WeakEvents.CollectionChanged.Unsubscribe(incc, this);
         if (source is INotifyPropertyChanged inpc)
             WeakEvents.ThreadSafePropertyChanged.Unsubscribe(inpc, this);
+    }
+
+    private void UpdateValueOrSetError(object? source)
+    {
+        try { UpdateValue(source); }
+        catch (Exception e) { SetError(e); }
     }
 }

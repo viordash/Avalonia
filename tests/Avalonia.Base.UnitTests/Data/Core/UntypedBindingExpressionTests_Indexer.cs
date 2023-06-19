@@ -342,13 +342,13 @@ public abstract class UntypedBindingExpressionTests_Indexer
         {
             var path = expression.Body.ToString();
 
-            // Removes leading "o."
+            // Removes leading "o.".
             path = new Regex(@"^\w\.").Replace(path, "");
 
-            // Replaces ".get_Item("x")" with "[x]"
+            // Replaces ".get_Item("x")" with "[x]".
             path = new Regex(@"\.get_Item\((.+)\)$").Replace(path, "[$1]");
 
-            // Replaces ".Get(x)" with "[x]"
+            // Replaces ".Get(x)" with "[x]".
             path = new Regex(@"\.Get\((.+)\)$").Replace(path, "[$1]");
 
             // Remove quotes.
