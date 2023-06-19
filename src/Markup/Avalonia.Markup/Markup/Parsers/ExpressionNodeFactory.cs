@@ -26,6 +26,7 @@ namespace Avalonia.Markup.Parsers
                 {
                     BindingExpressionGrammar.AncestorNode ancestor => LogicalAncestorNode(typeResolver, ancestor),
                     BindingExpressionGrammar.AttachedPropertyNameNode attached => AttachedPropertyNode(typeResolver, attached),
+                    BindingExpressionGrammar.EmptyExpressionNode => null,
                     BindingExpressionGrammar.NameNode name => new NamedElementNode(nameScope, name.Name),
                     BindingExpressionGrammar.NotNode => new LogicalNotNode(),
                     BindingExpressionGrammar.PropertyNameNode propName => new PluginPropertyAccessorNode(propName.PropertyName),
