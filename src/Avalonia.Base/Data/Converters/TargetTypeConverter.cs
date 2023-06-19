@@ -5,7 +5,6 @@ using System.Globalization;
 
 namespace Avalonia.Data.Converters;
 
-[RequiresUnreferencedCode(TrimmingMessages.TypeConversionRequiresUnreferencedCodeMessage)]
 internal class TargetTypeConverter : TypeConverter
 {
     public TargetTypeConverter(Type targetType) => TargetType = targetType;
@@ -21,6 +20,13 @@ internal class TargetTypeConverter : TypeConverter
 
     public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
     {
-        return DefaultValueConverter.Instance.Convert(value, TargetType, null, CultureInfo.InvariantCulture);
+        // We may want to generate code to do this in order to avoid reflection.
+        if (TargetType.IsAssignableFrom(value.GetType()))
+            return value;
+        if (value is IConvertible convertible)
+            return convertible.ToType(TargetType, culture);
+        return new BindingNotification(
+            new InvalidCastException($"Cannot convert '{value}' to '{TargetType.Name}'."),
+            BindingErrorType.Error);
     }
 }
