@@ -85,6 +85,8 @@ namespace Avalonia.Data
                 Source ?? target,
                 nodes,
                 FallbackValue,
+                converter: Converter,
+                converterParameter: ConverterParameter,
                 targetTypeConverter: TargetTypeConverter.Create(targetProperty));
             return new InstancedBinding(expression, Mode, Priority);
         }

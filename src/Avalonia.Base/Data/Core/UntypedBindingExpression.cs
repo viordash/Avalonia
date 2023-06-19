@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq.Expressions;
 using Avalonia.Data.Converters;
 using Avalonia.Data.Core.ExpressionNodes;
@@ -25,7 +26,9 @@ internal class UntypedBindingExpression : IObservable<object?>,
     private readonly WeakReference<object?>? _source;
     private readonly IReadOnlyList<ExpressionNode> _nodes;
     private readonly object? _fallbackValue;
-    private readonly TypeConverter? _targetTypeConverter;
+    private readonly IValueConverter? _converter;
+    private readonly object? _converterParameter;
+    private readonly TargetTypeConverter? _targetTypeConverter;
     private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
 
@@ -37,6 +40,8 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="fallbackValue">
     /// The fallback value. Pass <see cref="AvaloniaProperty.UnsetValue"/> for no fallback.
     /// </param>
+    /// <param name="converter">The converter to use.</param>
+    /// <param name="converterParameter">The converter parameter.</param>
     /// <param name="targetTypeConverter">
     /// A final type converter to be run on the produced value.
     /// </param>
@@ -44,11 +49,15 @@ internal class UntypedBindingExpression : IObservable<object?>,
         object? source,
         IReadOnlyList<ExpressionNode> nodes,
         object? fallbackValue,
-        TypeConverter? targetTypeConverter = null)
+        IValueConverter? converter = null,
+        object? converterParameter = null,
+        TargetTypeConverter? targetTypeConverter = null)
     {
         _source = new(source);
         _nodes = nodes;
         _fallbackValue = fallbackValue;
+        _converter = converter;
+        _converterParameter = converterParameter;
         _targetTypeConverter = targetTypeConverter;
 
         for (var i = 0; i < nodes.Count; ++i)
@@ -66,7 +75,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     public UntypedBindingExpression(
         IObservable<object?> source,
         IReadOnlyList<ExpressionNode> nodes,
-        TypeConverter? targetTypeConverter = null)
+        TargetTypeConverter? targetTypeConverter = null)
     {
         _sourceObservable = source;
         _nodes = nodes;
@@ -110,7 +119,12 @@ internal class UntypedBindingExpression : IObservable<object?>,
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
         var fallback = fallbackValue.HasValue ? fallbackValue.Value : AvaloniaProperty.UnsetValue;
         var targetTypeConverter = targetType is not null ? new TargetTypeConverter(targetType) : null;
-        return new UntypedBindingExpression(source, nodes, fallback, targetTypeConverter);
+
+        return new UntypedBindingExpression(
+            source,
+            nodes,
+            fallback,
+            targetTypeConverter: targetTypeConverter);
     }
 
     /// <summary>
@@ -193,6 +207,18 @@ internal class UntypedBindingExpression : IObservable<object?>,
             return;
 
         var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
+
+        if (_converter is not null)
+        {
+            value = _converter.Convert(
+                value,
+                _targetTypeConverter?.TargetType ?? typeof(object),
+                _converterParameter,
+                CultureInfo.InvariantCulture);
+        }
+
+        if (value == BindingOperations.DoNothing)
+            return;
 
         if (_targetTypeConverter is not null && value is not null)
             value = BindingNotification.ExtractValue(_targetTypeConverter.ConvertFrom(value));

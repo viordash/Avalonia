@@ -8,11 +8,11 @@ namespace Avalonia.Data.Converters;
 [RequiresUnreferencedCode(TrimmingMessages.TypeConversionRequiresUnreferencedCodeMessage)]
 internal class TargetTypeConverter : TypeConverter
 {
-    private readonly Type _targetType;
+    public TargetTypeConverter(Type targetType) => TargetType = targetType;
 
-    public TargetTypeConverter(Type targetType) => _targetType = targetType;
+    public Type TargetType { get; }
 
-    public static TypeConverter? Create(AvaloniaProperty? targetProperty)
+    public static TargetTypeConverter? Create(AvaloniaProperty? targetProperty)
     {
         if (targetProperty is null)
             return null;
@@ -21,6 +21,6 @@ internal class TargetTypeConverter : TypeConverter
 
     public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
     {
-        return DefaultValueConverter.Instance.Convert(value, _targetType, null, CultureInfo.InvariantCulture);
+        return DefaultValueConverter.Instance.Convert(value, TargetType, null, CultureInfo.InvariantCulture);
     }
 }
