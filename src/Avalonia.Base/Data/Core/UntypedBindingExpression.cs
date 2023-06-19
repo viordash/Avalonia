@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using Avalonia.Data.Converters;
 using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Data.Core.Parsers;
 using Avalonia.Reactive;
@@ -97,16 +98,19 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="source">The source from which the binding value will be read.</param>
     /// <param name="expression">The expression representing the binding path.</param>
     /// <param name="fallbackValue">The fallback value.</param>
+    /// <param name="targetType">The target type to convert to.</param>
     [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
     public static UntypedBindingExpression Create<TIn, TOut>(
         TIn source,
         Expression<Func<TIn, TOut>> expression,
-        Optional<object?> fallbackValue = default)
+        Optional<object?> fallbackValue = default,
+        Type? targetType = null)
             where TIn : class?
     {
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
         var fallback = fallbackValue.HasValue ? fallbackValue.Value : AvaloniaProperty.UnsetValue;
-        return new UntypedBindingExpression(source, nodes, fallback);
+        var targetTypeConverter = targetType is not null ? new TargetTypeConverter(targetType) : null;
+        return new UntypedBindingExpression(source, nodes, fallback, targetTypeConverter);
     }
 
     /// <summary>
