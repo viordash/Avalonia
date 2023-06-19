@@ -1826,9 +1826,8 @@ namespace Avalonia.Controls.UnitTests
 
             public InstancedBinding ItemsSelector(object item)
             {
-                throw new NotImplementedException();
-                ////var obs = ExpressionObserver.Create(item, o => ((Node)o).Children);
-                ////return InstancedBinding.OneWay(obs);
+                var obs = UntypedBindingExpression.Create(item, o => ((Node)o).Children, typeof(object));
+                return InstancedBinding.OneWay(obs);
             }
 
             public bool Match(object? data)
