@@ -357,7 +357,7 @@ public abstract class UntypedBindingExpressionTests_Indexer
             var reader = new CharacterReader(path);
             var (astNodes, sourceMode) = BindingExpressionGrammar.Parse(ref reader);
             var nodes = new List<ExpressionNode>();
-            ExpressionNodeFactory.CreateFromAst(astNodes, null, null, nodes);
+            ExpressionNodeFactory.CreateFromAst(astNodes, null, null, nodes, out _);
 
             return new UntypedBindingExpression(data, nodes, AvaloniaProperty.UnsetValue);
         }

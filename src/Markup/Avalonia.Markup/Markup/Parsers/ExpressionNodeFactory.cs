@@ -19,22 +19,48 @@ namespace Avalonia.Markup.Parsers
             IEnumerable<BindingExpressionGrammar.INode> astNodes,
             Func<string?, string, Type>? typeResolver,
             INameScope? nameScope,
-            List<ExpressionNode> result)
+            List<ExpressionNode> result,
+            out bool isRooted)
         {
+            isRooted = false;
+
             foreach (var astNode in astNodes)
             {
-                ExpressionNode? node = astNode switch
+                ExpressionNode? node = null;
+
+                switch (astNode)
                 {
-                    BindingExpressionGrammar.AncestorNode ancestor => LogicalAncestorNode(typeResolver, ancestor),
-                    BindingExpressionGrammar.AttachedPropertyNameNode attached => AttachedPropertyNode(typeResolver, attached),
-                    BindingExpressionGrammar.EmptyExpressionNode => null,
-                    BindingExpressionGrammar.IndexerNode indexer => new ReflectionIndexerNode((IList)indexer.Arguments),
-                    BindingExpressionGrammar.NameNode name => new NamedElementNode(nameScope, name.Name),
-                    BindingExpressionGrammar.NotNode => new LogicalNotNode(),
-                    BindingExpressionGrammar.PropertyNameNode propName => new PluginPropertyAccessorNode(propName.PropertyName),
-                    BindingExpressionGrammar.SelfNode => null,
-                    _ => throw new NotSupportedException($"Unsupported binding expression: {astNode}."),
-                };
+                    case BindingExpressionGrammar.AncestorNode ancestor:
+                        node = LogicalAncestorNode(typeResolver, ancestor);
+                        isRooted = true;
+                        break;
+                    case BindingExpressionGrammar.AttachedPropertyNameNode attached:
+                        node = AttachedPropertyNode(typeResolver, attached);
+                        break;
+                    case BindingExpressionGrammar.EmptyExpressionNode:
+                        node = null;
+                        break;
+                    case BindingExpressionGrammar.IndexerNode indexer:
+                        node = new ReflectionIndexerNode((IList)indexer.Arguments);
+                        break;
+                    case BindingExpressionGrammar.NameNode name:
+                        node = new NamedElementNode(nameScope, name.Name);
+                        isRooted = true;
+                        break;
+                    case BindingExpressionGrammar.NotNode:
+                        node = new LogicalNotNode();
+                        break;
+                    case BindingExpressionGrammar.PropertyNameNode propName:
+                        node = new PluginPropertyAccessorNode(propName.PropertyName);
+                        break;
+                    case BindingExpressionGrammar.TypeCastNode typeCast:
+                        node = new ReflectionTypeCastNode(LookupType(typeResolver, typeCast.Namespace, typeCast.TypeName));
+                        break;
+                    case BindingExpressionGrammar.SelfNode:
+                        node = null;
+                        isRooted = true;
+                        break;
+                }
 
                 if (node is not null)
                     result.Add(node);

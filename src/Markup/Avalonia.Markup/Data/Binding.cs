@@ -70,15 +70,16 @@ namespace Avalonia.Data
             bool enableDataValidation = false)
         {
             var nodes = new List<ExpressionNode>();
+            var isRooted = false;
 
             if (!string.IsNullOrEmpty(Path))
             {
                 var reader = new CharacterReader(Path.AsSpan());
                 var (astNodes, sourceMode) = BindingExpressionGrammar.Parse(ref reader);
-                ExpressionNodeFactory.CreateFromAst(astNodes, TypeResolver, GetNameScope(), nodes);
+                ExpressionNodeFactory.CreateFromAst(astNodes, TypeResolver, GetNameScope(), nodes, out isRooted);
             }
 
-            if (CreateSourceNode(targetProperty) is { } sourceNode)
+            if (!isRooted && CreateSourceNode(targetProperty) is { } sourceNode)
                 nodes.Insert(0, sourceNode);
 
             var expression = new UntypedBindingExpression(
