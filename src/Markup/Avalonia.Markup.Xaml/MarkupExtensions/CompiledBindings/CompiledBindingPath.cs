@@ -43,9 +43,9 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
                     ////case MethodAsDelegateElement methodAsDelegate:
                     ////    node = new PropertyAccessorNode(methodAsDelegate.Method.Name, enableValidation, new MethodAccessorPlugin(methodAsDelegate.Method, methodAsDelegate.DelegateType));
                     ////    break;
-                    ////case ArrayElementPathElement arr:
-                    ////    node = new PropertyAccessorNode(CommonPropertyNames.IndexerName, enableValidation, new ArrayElementPlugin(arr.Indices, arr.ElementType));
-                    ////    break;
+                    case ArrayElementPathElement arr:
+                        node = new ArrayIndexerNode(arr.Indices);
+                        break;
                     case VisualAncestorPathElement visualAncestor:
                         node = new VisualAncestorElementNode(visualAncestor.AncestorType, visualAncestor.Level);
                         isRooted = true;
