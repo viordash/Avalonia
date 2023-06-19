@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -23,7 +24,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
 {
     private readonly IObservable<object?>? _sourceObservable;
     private readonly WeakReference<object?>? _source;
-    private readonly ExpressionNode[] _nodes;
+    private readonly IReadOnlyList<ExpressionNode> _nodes;
     private readonly Type _targetType;
     private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
@@ -36,16 +37,15 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="targetType">The type to which produced values should be converted.</param>
     public UntypedBindingExpression(
         object? source,
-        ExpressionNode[] nodes,
+        IReadOnlyList<ExpressionNode> nodes,
         Type targetType)
     {
         _source = new(source);
         _nodes = nodes;
         _targetType = targetType;
 
-        var i = 0;
-        foreach (var node in nodes)
-            node.SetOwner(this, i++);
+        for (var i = 0; i < nodes.Count; ++i)
+            nodes[i].SetOwner(this, i);
     }
 
     /// <summary>
@@ -56,16 +56,15 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="targetType">The type to which produced values should be converted.</param>
     public UntypedBindingExpression(
         IObservable<object?> source,
-        ExpressionNode[] nodes,
+        IReadOnlyList<ExpressionNode> nodes,
         Type targetType)
     {
         _sourceObservable = source;
         _nodes = nodes;
         _targetType = targetType;
 
-        var i = 0;
-        foreach (var node in nodes)
-            node.SetOwner(this, i++);
+        for (var i = 0; i < nodes.Count; ++i)
+            nodes[i].SetOwner(this, i);
     }
 
     /// <summary>
@@ -77,9 +76,9 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// </returns>
     public bool SetValue(object? value)
     {
-        if (_nodes.Length == 0)
+        if (_nodes.Count == 0)
             return false;
-        return _nodes[_nodes.Length - 1].WriteValueToSource(value);
+        return _nodes[_nodes.Count - 1].WriteValueToSource(value);
     }
 
     /// <summary>
@@ -152,7 +151,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="value">The <see cref="ExpressionNode.Value"/>.</param>
     internal void OnNodeValueChanged(int nodeIndex, object? value)
     {
-        if (nodeIndex == _nodes.Length - 1)
+        if (nodeIndex == _nodes.Count - 1)
             PublishValue();
         else
             _nodes[nodeIndex + 1].SetSource(value);
@@ -172,7 +171,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
         
         if (_source?.TryGetTarget(out var source) == true)
         {
-            if (_nodes.Length > 0)
+            if (_nodes.Count > 0)
                 _nodes[0].SetSource(source);
             else
                 _observer.OnNext(source);
@@ -197,7 +196,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
         if (_observer is null)
             return;
 
-        var value = _nodes.Length > 0 ? _nodes[_nodes.Length - 1].Value : null;
+        var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
         
         if (TypeUtilities.TryConvert(_targetType, value, CultureInfo.InvariantCulture, out var convertedValue))
         {
@@ -207,7 +206,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
 
     private void OnSourceChanged(object? source)
     {
-        if (_nodes.Length > 0)
+        if (_nodes.Count > 0)
             _nodes[0].SetSource(source);
     }
 }

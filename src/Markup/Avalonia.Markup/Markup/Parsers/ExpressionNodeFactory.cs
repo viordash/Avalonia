@@ -14,13 +14,12 @@ namespace Avalonia.Markup.Parsers
     internal static class ExpressionNodeFactory
     {
         [RequiresUnreferencedCode(TrimmingMessages.ReflectionBindingRequiresUnreferencedCodeMessage)]
-        public static ExpressionNode[] CreateFromAst(
+        public static void CreateFromAst(
             IEnumerable<BindingExpressionGrammar.INode> astNodes,
             Func<string?, string, Type>? typeResolver,
-            INameScope? nameScope)
+            INameScope? nameScope,
+            List<ExpressionNode> result)
         {
-            var result = new List<ExpressionNode>();
-
             foreach (var astNode in astNodes)
             {
                 ExpressionNode? node = astNode switch
@@ -36,8 +35,6 @@ namespace Avalonia.Markup.Parsers
                 if (node is not null)
                     result.Add(node);
             }
-
-            return result.ToArray();
         }
         
         public static ExpressionNode? CreateRelativeSource(RelativeSource source, Func<string?, string, Type>? typeResolver)

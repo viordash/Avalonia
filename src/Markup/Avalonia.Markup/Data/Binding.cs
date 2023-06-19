@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Avalonia.Controls;
@@ -64,17 +65,17 @@ namespace Avalonia.Data
             object? anchor = null,
             bool enableDataValidation = false)
         {
-            var nodes = Array.Empty<ExpressionNode>();
+            var nodes = new List<ExpressionNode>();
 
             if (!string.IsNullOrEmpty(Path))
             {
                 var reader = new CharacterReader(Path.AsSpan());
                 var (astNodes, sourceMode) = BindingExpressionGrammar.Parse(ref reader);
-                nodes = ExpressionNodeFactory.CreateFromAst(astNodes, TypeResolver, GetNameScope());
+                ExpressionNodeFactory.CreateFromAst(astNodes, TypeResolver, GetNameScope(), nodes);
             }
 
             if (CreateSourceNode() is { } sourceNode)
-                nodes = nodes.Prepend(sourceNode).ToArray();
+                nodes.Insert(0, sourceNode);
 
             var expression = new UntypedBindingExpression(
                 Source ?? target,
