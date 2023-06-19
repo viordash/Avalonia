@@ -9,10 +9,10 @@ internal class DataContextNode : ExpressionNode
         if (oldSource is StyledElement oldElement)
             oldElement.PropertyChanged -= OnPropertyChanged;
         
-        if (newSource is StyledElement newElement)
+        if (newSource is IDataContextProvider && newSource is AvaloniaObject ao)
         {
-            newElement.PropertyChanged += OnPropertyChanged;
-            SetValue(newElement.DataContext);
+            ao.PropertyChanged += OnPropertyChanged;
+            SetValue(ao.GetValue(StyledElement.DataContextProperty));
         }
         else if (newSource is null)
         {
