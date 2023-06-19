@@ -84,7 +84,8 @@ namespace Avalonia.Data
             var expression = new UntypedBindingExpression(
                 Source ?? target,
                 nodes,
-                TargetTypeConverter.Create(targetProperty));
+                FallbackValue,
+                targetTypeConverter: TargetTypeConverter.Create(targetProperty));
             return new InstancedBinding(expression, Mode, Priority);
         }
 

@@ -148,20 +148,20 @@ namespace Avalonia.Base.UnitTests.Data.Core
         /// There was a bug whereby pushing a null as the source didn't update the leaf node,
         /// causing a subsequent SetValue to update an object that should have become unbound.
         /// </remarks>
-        [Fact]
-        public void Pushing_Null_To_RootObservable_Updates_Leaf_Node()
-        {
-            var data = new Person { Pet = new Dog { Name = "Fido" } };
-            var rootObservable = new BehaviorSubject<Person>(data);
-            var target = UntypedBindingExpression.Create(rootObservable, o => o.Pet.Name);
+        ////[Fact]
+        ////public void Pushing_Null_To_RootObservable_Updates_Leaf_Node()
+        ////{
+        ////    var data = new Person { Pet = new Dog { Name = "Fido" } };
+        ////    var rootObservable = new BehaviorSubject<Person>(data);
+        ////    var target = UntypedBindingExpression.Create(rootObservable, o => o.Pet.Name);
 
-            using (target.Subscribe(_ => { }))
-            {
-                rootObservable.OnNext(null);
-                target.SetValue("Rover");
-                Assert.Equal("Fido", data.Pet.Name);
-            }
-        }
+        ////    using (target.Subscribe(_ => { }))
+        ////    {
+        ////        rootObservable.OnNext(null);
+        ////        target.SetValue("Rover");
+        ////        Assert.Equal("Fido", data.Pet.Name);
+        ////    }
+        ////}
 
         private interface IAnimal
         {

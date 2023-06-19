@@ -360,25 +360,25 @@ namespace Avalonia.Base.UnitTests.Data.Core
         ////    GC.KeepAlive(data);
         ////}
 
-        [Fact]
-        public void Should_Track_Property_Value_From_Observable_Root()
-        {
-            var scheduler = new TestScheduler();
-            var source = scheduler.CreateColdObservable(
-                OnNext(1, new Class1 { Foo = "foo" }),
-                OnNext(2, new Class1 { Foo = "bar" }));
-            var target = UntypedBindingExpression.Create(source, o => o.Foo);
-            var result = new List<object>();
+        ////[Fact]
+        ////public void Should_Track_Property_Value_From_Observable_Root()
+        ////{
+        ////    var scheduler = new TestScheduler();
+        ////    var source = scheduler.CreateColdObservable(
+        ////        OnNext(1, new Class1 { Foo = "foo" }),
+        ////        OnNext(2, new Class1 { Foo = "bar" }));
+        ////    var target = UntypedBindingExpression.Create(source, o => o.Foo);
+        ////    var result = new List<object>();
 
-            using (target.Subscribe(x => result.Add(x)))
-            {
-                result.Clear();
-                scheduler.Start();
-            }
+        ////    using (target.Subscribe(x => result.Add(x)))
+        ////    {
+        ////        result.Clear();
+        ////        scheduler.Start();
+        ////    }
 
-            Assert.Equal(new[] { "foo", "bar" }, result);
-            Assert.All(source.Subscriptions, x => Assert.NotEqual(Subscription.Infinite, x.Unsubscribe));
-        }
+        ////    Assert.Equal(new[] { "foo", "bar" }, result);
+        ////    Assert.All(source.Subscriptions, x => Assert.NotEqual(Subscription.Infinite, x.Unsubscribe));
+        ////}
 
         ////[Fact]
         ////public void Subscribing_Multiple_Times_Should_Return_Values_To_All()

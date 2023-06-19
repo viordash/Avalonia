@@ -23,6 +23,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     private readonly IObservable<object?>? _sourceObservable;
     private readonly WeakReference<object?>? _source;
     private readonly IReadOnlyList<ExpressionNode> _nodes;
+    private readonly object? _fallbackValue;
     private readonly TypeConverter? _targetTypeConverter;
     private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
@@ -32,16 +33,21 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// </summary>
     /// <param name="source">The source from which the value will be read.</param>
     /// <param name="nodes">The nodes representing the binding path.</param>
+    /// <param name="fallbackValue">
+    /// The fallback value. Pass <see cref="AvaloniaProperty.UnsetValue"/> for no fallback.
+    /// </param>
     /// <param name="targetTypeConverter">
     /// A final type converter to be run on the produced value.
     /// </param>
     public UntypedBindingExpression(
         object? source,
         IReadOnlyList<ExpressionNode> nodes,
+        object? fallbackValue,
         TypeConverter? targetTypeConverter = null)
     {
         _source = new(source);
         _nodes = nodes;
+        _fallbackValue = fallbackValue;
         _targetTypeConverter = targetTypeConverter;
 
         for (var i = 0; i < nodes.Count; ++i)
@@ -90,31 +96,17 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <typeparam name="TOut">The output type of the binding expression.</typeparam>
     /// <param name="source">The source from which the binding value will be read.</param>
     /// <param name="expression">The expression representing the binding path.</param>
+    /// <param name="fallbackValue">The fallback value.</param>
     [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
     public static UntypedBindingExpression Create<TIn, TOut>(
         TIn source,
-        Expression<Func<TIn, TOut>> expression)
+        Expression<Func<TIn, TOut>> expression,
+        Optional<object?> fallbackValue = default)
             where TIn : class?
     {
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
-        return new UntypedBindingExpression(source, nodes);
-    }
-
-    /// <summary>
-    /// Creates an <see cref="UntypedBindingExpression"/> from an expression tree.
-    /// </summary>
-    /// <typeparam name="TIn">The input type of the binding expression.</typeparam>
-    /// <typeparam name="TOut">The output type of the binding expression.</typeparam>
-    /// <param name="source">An observable which produces the source from which the value will be read.</param>
-    /// <param name="expression">The expression representing the binding path.</param>
-    [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
-    public static UntypedBindingExpression Create<TIn, TOut>(
-        IObservable<TIn> source,
-        Expression<Func<TIn, TOut>> expression)
-            where TIn : class?
-    {
-        var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
-        return new UntypedBindingExpression(source, nodes);
+        var fallback = fallbackValue.HasValue ? fallbackValue.Value : AvaloniaProperty.UnsetValue;
+        return new UntypedBindingExpression(source, nodes, fallback);
     }
 
     /// <summary>
@@ -199,7 +191,10 @@ internal class UntypedBindingExpression : IObservable<object?>,
         var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
 
         if (_targetTypeConverter is not null && value is not null)
-            value = _targetTypeConverter.ConvertFrom(value);
+            value = BindingNotification.ExtractValue(_targetTypeConverter.ConvertFrom(value));
+
+        if (_fallbackValue != AvaloniaProperty.UnsetValue && value == AvaloniaProperty.UnsetValue)
+            value = _fallbackValue;
 
         _observer.OnNext(value);
     }

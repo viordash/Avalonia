@@ -5,7 +5,6 @@ using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Data;
-using Avalonia.Data.Converters;
 using Avalonia.Threading;
 using Moq;
 using Xunit;

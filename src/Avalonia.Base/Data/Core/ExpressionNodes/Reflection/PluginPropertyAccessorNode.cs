@@ -44,7 +44,7 @@ internal class PluginPropertyAccessorNode : ExpressionNode
         }
         else
         {
-            SetValue(null);
+            ClearValue();
         }
     }
 

@@ -53,7 +53,8 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
 
             var expression = new UntypedBindingExpression(
                 Source ?? target,
-                nodes);
+                nodes,
+                FallbackValue);
 
             return new InstancedBinding(expression, Mode, Priority);
         }
