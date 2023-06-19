@@ -1,331 +1,382 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq.Expressions;
 using System.Reactive.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Data.Core;
+using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Diagnostics;
+using Avalonia.Markup.Parsers;
 using Avalonia.Threading;
 using Avalonia.UnitTests;
+using Avalonia.Utilities;
 using Xunit;
 
-namespace Avalonia.Base.UnitTests.Data.Core
+#nullable enable
+
+namespace Avalonia.Base.UnitTests.Data.Core;
+
+public abstract class UntypedBindingExpressionTests_Indexer
 {
-    public class UntypedBindingExpressionTests_Indexer
+    [Fact]
+    public async Task Should_Get_Array_Value()
     {
-        [Fact]
-        public async Task Should_Get_Array_Value()
+        var data = new { Foo = new[] { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[1]);
+        var result = await target.Take(1);
+
+        Assert.Equal("bar", result);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public async Task Should_Get_MultiDimensional_Array_Value()
+    {
+        var data = new { Foo = new[,] { { "foo", "bar" }, { "baz", "qux" } } };
+        var target = CreateTarget(data, o => o.Foo[1, 1]);
+        var result = await target.Take(1);
+
+        Assert.Equal("qux", result);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public async Task Should_Get_Value_For_String_Indexer()
+    {
+        var data = new { Foo = new Dictionary<string, string> { { "foo", "bar" }, { "baz", "qux" } } };
+        var target = CreateTarget(data, o => o.Foo["foo"]);
+        var result = await target.Take(1);
+
+        Assert.Equal("bar", result);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public async Task Should_Get_Value_For_Non_String_Indexer()
+    {
+        var data = new { Foo = new Dictionary<double, string> { { 1.0, "bar" }, { 2.0, "qux" } } };
+        var target = CreateTarget(data, o => o.Foo[1.0]);
+        var result = await target.Take(1);
+
+        Assert.Equal("bar", result);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public async Task Array_Out_Of_Bounds_Should_Return_UnsetValue()
+    {
+        var data = new { Foo = new[] { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[2]);
+        var result = await target.Take(1);
+
+        Assert.Equal(AvaloniaProperty.UnsetValue, result);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public async Task List_Out_Of_Bounds_Should_Return_UnsetValue()
+    {
+        var data = new { Foo = new List<string> { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[2]);
+        var result = await target.Take(1);
+
+        Assert.Equal(AvaloniaProperty.UnsetValue, result);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public async Task Should_Get_List_Value()
+    {
+        var data = new { Foo = new List<string> { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[1]);
+        var result = await target.Take(1);
+
+        Assert.Equal("bar", result);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Track_INCC_Add()
+    {
+        var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[2]);
+        var result = new List<object?>();
+
+        using (var sub = target.Subscribe(result.Add))
         {
-            var data = new { Foo = new[] { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, x => x.Foo[1], typeof(object));
-            var result = await target.Take(1);
-
-            Assert.Equal("bar", result);
-
-            GC.KeepAlive(data);
+            data.Foo.Add("baz");
         }
 
-        [Fact]
-        public async Task Should_Get_MultiDimensional_Array_Value()
+        // Forces WeakEvent compact
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(new[] { AvaloniaProperty.UnsetValue, "baz" }, result);
+        Assert.Null(((INotifyCollectionChangedDebug)data.Foo).GetCollectionChangedSubscribers());
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Track_INCC_Remove()
+    {
+        var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[0]);
+        var result = new List<object?>();
+
+        using (var sub = target.Subscribe(result.Add))
         {
-            var data = new { Foo = new[,] { { "foo", "bar" }, { "baz", "qux" } } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[1, 1], typeof(object));
-            var result = await target.Take(1);
-
-            Assert.Equal("qux", result);
-
-            GC.KeepAlive(data);
+            data.Foo.RemoveAt(0);
         }
 
-        [Fact]
-        public async Task Should_Get_Value_For_String_Indexer()
+        // Forces WeakEvent compact
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(new[] { "foo", "bar" }, result);
+        Assert.Null(((INotifyCollectionChangedDebug)data.Foo).GetCollectionChangedSubscribers());
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Track_INCC_Replace()
+    {
+        var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[1]);
+        var result = new List<object?>();
+
+        using (var sub = target.Subscribe(result.Add))
         {
-            var data = new { Foo = new Dictionary<string, string> { { "foo", "bar" }, { "baz", "qux" } } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo["foo"], typeof(object));
-            var result = await target.Take(1);
-
-            Assert.Equal("bar", result);
-
-            GC.KeepAlive(data);
+            data.Foo[1] = "baz";
         }
 
-        [Fact]
-        public async Task Should_Get_Value_For_Non_String_Indexer()
+        // Forces WeakEvent compact
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(new[] { "bar", "baz" }, result);
+        Assert.Null(((INotifyCollectionChangedDebug)data.Foo).GetCollectionChangedSubscribers());
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Track_INCC_Move()
+    {
+        // Using ObservableCollection here because AvaloniaList does not yet have a Move
+        // method, but even if it did we need to test with ObservableCollection as well
+        // as AvaloniaList as it implements PropertyChanged as an explicit interface event.
+        var data = new { Foo = new ObservableCollection<string> { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[1]);
+        var result = new List<object?>();
+
+        var sub = target.Subscribe(result.Add);
+        data.Foo.Move(0, 1);
+
+        Assert.Equal(new[] { "bar", "foo" }, result);
+
+        GC.KeepAlive(sub);
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Track_INCC_Reset()
+    {
+        var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[1]);
+        var result = new List<object?>();
+
+        var sub = target.Subscribe(result.Add);
+        data.Foo.Clear();
+
+        Assert.Equal(new[] { "bar", AvaloniaProperty.UnsetValue }, result);
+
+        GC.KeepAlive(sub);
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Track_NonIntegerIndexer()
+    {
+        var data = new { Foo = new NonIntegerIndexer() };
+        data.Foo["foo"] = "bar";
+        data.Foo["baz"] = "qux";
+
+        var target = CreateTarget(data, o => o.Foo["foo"]);
+        var result = new List<object?>();
+
+        using (var sub = target.Subscribe(result.Add))
         {
-            var data = new { Foo = new Dictionary<double, string> { { 1.0, "bar" }, { 2.0, "qux" } } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[1.0], typeof(object));
-            var result = await target.Take(1);
-
-            Assert.Equal("bar", result);
-
-            GC.KeepAlive(data);
+            data.Foo["foo"] = "bar2";
         }
 
-        [Fact]
-        public async Task Array_Out_Of_Bounds_Should_Return_UnsetValue()
+        // Forces WeakEvent compact
+        Dispatcher.UIThread.RunJobs();
+
+        var expected = new[] { "bar", "bar2" };
+        Assert.Equal(expected, result);
+        Assert.Equal(0, data.Foo.PropertyChangedSubscriptionCount);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_SetArrayIndex()
+    {
+        var data = new { Foo = new[] { "foo", "bar" } };
+        var target = CreateTarget(data, o => o.Foo[1]);
+
+        using (target.Subscribe(_ => { }))
         {
-            var data = new { Foo = new[] { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[2], typeof(object));
-            var result = await target.Take(1);
-
-            Assert.Equal(AvaloniaProperty.UnsetValue, result);
-
-            GC.KeepAlive(data);
+            Assert.True(target.SetValue("baz"));
         }
 
-        [Fact]
-        public async Task List_Out_Of_Bounds_Should_Return_UnsetValue()
+        Assert.Equal("baz", data.Foo[1]);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Set_ExistingDictionaryEntry()
+    {
+        var data = new
         {
-            var data = new { Foo = new List<string> { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[2], typeof(object));
-            var result = await target.Take(1);
-
-            Assert.Equal(AvaloniaProperty.UnsetValue, result);
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public async Task Should_Get_List_Value()
-        {
-            var data = new { Foo = new List<string> { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[1], typeof(object));
-            var result = await target.Take(1);
-
-            Assert.Equal("bar", result);
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_Track_INCC_Add()
-        {
-            var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[2], typeof(object));
-            var result = new List<object>();
-
-            using (var sub = target.Subscribe(x => result.Add(x)))
+            Foo = new Dictionary<string, int>
             {
-                data.Foo.Add("baz");
+                {"foo", 1 }
             }
+        };
 
-            // Forces WeakEvent compact
-            Dispatcher.UIThread.RunJobs();
-
-            Assert.Equal(new[] { AvaloniaProperty.UnsetValue, "baz" }, result);
-            Assert.Null(((INotifyCollectionChangedDebug)data.Foo).GetCollectionChangedSubscribers());
-
-            GC.KeepAlive(data);
+        var target = CreateTarget(data, o => o.Foo["foo"]);
+        using (target.Subscribe(_ => { }))
+        {
+            Assert.True(target.SetValue(4));
         }
 
-        [Fact]
-        public void Should_Track_INCC_Remove()
-        {
-            var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[0], typeof(object));
-            var result = new List<object>();
+        Assert.Equal(4, data.Foo["foo"]);
 
-            using (var sub = target.Subscribe(x => result.Add(x)))
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Add_NewDictionaryEntry()
+    {
+        var data = new
+        {
+            Foo = new Dictionary<string, int>
             {
-                data.Foo.RemoveAt(0);
+                {"foo", 1 }
             }
-            // Forces WeakEvent compact
-            Dispatcher.UIThread.RunJobs();
+        };
 
-            Assert.Equal(new[] { "foo", "bar" }, result);
-            Assert.Null(((INotifyCollectionChangedDebug)data.Foo).GetCollectionChangedSubscribers());
-
-            GC.KeepAlive(data);
+        var target = CreateTarget(data, o => o.Foo["bar"]);
+        using (target.Subscribe(_ => { }))
+        {
+            Assert.True(target.SetValue(4));
         }
 
-        [Fact]
-        public void Should_Track_INCC_Replace()
-        {
-            var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[1], typeof(object));
-            var result = new List<object>();
+        Assert.Equal(4, data.Foo["bar"]);
 
-            using (var sub = target.Subscribe(x => result.Add(x)))
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public void Should_Set_NonIntegerIndexer()
+    {
+        var data = new { Foo = new NonIntegerIndexer() };
+        data.Foo["foo"] = "bar";
+        data.Foo["baz"] = "qux";
+
+        var target = CreateTarget(data, o => o.Foo["foo"]);
+
+        using (target.Subscribe(_ => { }))
+        {
+            Assert.True(target.SetValue("bar2"));
+        }
+
+        Assert.Equal("bar2", data.Foo["foo"]);
+
+        GC.KeepAlive(data);
+    }
+
+    [Fact]
+    public async Task Indexer_Only_Binding_Works()
+    {
+        var data = new[] { 1, 2, 3 };
+
+        var target = UntypedBindingExpression.Create(data, o => o[1], typeof(object));
+
+        var value = await target.Take(1);
+
+        Assert.Equal(data[1], value);
+    }
+
+    private protected abstract UntypedBindingExpression CreateTarget<TIn, TOut>(
+        TIn data,
+        Expression<Func<TIn, TOut>> expression) where TIn : class?;
+
+    public class Expressions : UntypedBindingExpressionTests_Indexer
+    {
+        private protected override UntypedBindingExpression CreateTarget<TIn, TOut>(
+            TIn data,
+            Expression<Func<TIn, TOut>> expression)
+        {
+            return UntypedBindingExpression.Create(data, expression, typeof(object));
+        }
+    }
+
+    public class Reflection : UntypedBindingExpressionTests_Indexer
+    {
+        private protected override UntypedBindingExpression CreateTarget<TIn, TOut>(
+            TIn data,
+            Expression<Func<TIn, TOut>> expression)
+        {
+            var path = expression.Body.ToString();
+
+            // Removes leading "o."
+            path = new Regex(@"^\w\.").Replace(path, "");
+
+            // Replaces ".get_Item("x")" with "[x]"
+            path = new Regex(@"\.get_Item\((.+)\)$").Replace(path, "[$1]");
+
+            // Replaces ".Get(x)" with "[x]"
+            path = new Regex(@"\.Get\((.+)\)$").Replace(path, "[$1]");
+
+            // Remove quotes.
+            path = path.Replace("\"", "");
+
+            var reader = new CharacterReader(path);
+            var (astNodes, sourceMode) = BindingExpressionGrammar.Parse(ref reader);
+            var nodes = new List<ExpressionNode>();
+            ExpressionNodeFactory.CreateFromAst(astNodes, null, null, nodes);
+
+            return new UntypedBindingExpression(data, nodes, typeof(object));
+        }
+    }
+
+    private class NonIntegerIndexer : NotifyingBase
+    {
+        private readonly Dictionary<string, string> _storage = new Dictionary<string, string>();
+
+        public string this[string key]
+        {
+            get
             {
-                data.Foo[1] = "baz";
+                return _storage[key];
             }
-
-            // Forces WeakEvent compact
-            Dispatcher.UIThread.RunJobs();
-
-            Assert.Equal(new[] { "bar", "baz" }, result);
-            Assert.Null(((INotifyCollectionChangedDebug)data.Foo).GetCollectionChangedSubscribers());
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_Track_INCC_Move()
-        {
-            // Using ObservableCollection here because AvaloniaList does not yet have a Move
-            // method, but even if it did we need to test with ObservableCollection as well
-            // as AvaloniaList as it implements PropertyChanged as an explicit interface event.
-            var data = new { Foo = new ObservableCollection<string> { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[1], typeof(object));
-            var result = new List<object>();
-
-            var sub = target.Subscribe(x => result.Add(x));
-            data.Foo.Move(0, 1);
-
-            Assert.Equal(new[] { "bar", "foo" }, result);
-
-            GC.KeepAlive(sub);
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_Track_INCC_Reset()
-        {
-            var data = new { Foo = new AvaloniaList<string> { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[1], typeof(object));
-            var result = new List<object>();
-
-            var sub = target.Subscribe(x => result.Add(x));
-            data.Foo.Clear();
-
-            Assert.Equal(new[] { "bar", AvaloniaProperty.UnsetValue }, result);
-
-            GC.KeepAlive(sub);
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_Track_NonIntegerIndexer()
-        {
-            var data = new { Foo = new NonIntegerIndexer() };
-            data.Foo["foo"] = "bar";
-            data.Foo["baz"] = "qux";
-
-            var target = UntypedBindingExpression.Create(data, o => o.Foo["foo"], typeof(object));
-            var result = new List<object>();
-
-            using (var sub = target.Subscribe(x => result.Add(x)))
+            set
             {
-                data.Foo["foo"] = "bar2";
-            }
-
-            // Forces WeakEvent compact
-            Dispatcher.UIThread.RunJobs();
-
-            var expected = new[] { "bar", "bar2" };
-            Assert.Equal(expected, result);
-            Assert.Equal(0, data.Foo.PropertyChangedSubscriptionCount);
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_SetArrayIndex()
-        {
-            var data = new { Foo = new[] { "foo", "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[1], typeof(object));
-
-            using (target.Subscribe(_ => { }))
-            {
-                Assert.True(target.SetValue("baz"));
-            }
-
-            Assert.Equal("baz", data.Foo[1]);
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_Set_ExistingDictionaryEntry()
-        {
-            var data = new
-            {
-                Foo = new Dictionary<string, int>
-                {
-                    {"foo", 1 }
-                }
-            };
-
-            var target = UntypedBindingExpression.Create(data, o => o.Foo["foo"], typeof(object));
-            using (target.Subscribe(_ => { }))
-            {
-                Assert.True(target.SetValue(4));
-            }
-
-            Assert.Equal(4, data.Foo["foo"]);
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_Add_NewDictionaryEntry()
-        {
-            var data = new
-            {
-                Foo = new Dictionary<string, int>
-                {
-                    {"foo", 1 }
-                }
-            };
-
-            var target = UntypedBindingExpression.Create(data, o => o.Foo["bar"], typeof(object));
-            using (target.Subscribe(_ => { }))
-            {
-                Assert.True(target.SetValue(4));
-            }
-
-            Assert.Equal(4, data.Foo["bar"]);
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public void Should_Set_NonIntegerIndexer()
-        {
-            var data = new { Foo = new NonIntegerIndexer() };
-            data.Foo["foo"] = "bar";
-            data.Foo["baz"] = "qux";
-
-            var target = UntypedBindingExpression.Create(data, o => o.Foo["foo"], typeof(object));
-
-            using (target.Subscribe(_ => { }))
-            {
-                Assert.True(target.SetValue("bar2"));
-            }
-
-            Assert.Equal("bar2", data.Foo["foo"]);
-
-            GC.KeepAlive(data);
-        }
-
-        [Fact]
-        public async Task Indexer_Only_Binding_Works()
-        {
-            var data = new[] { 1, 2, 3 };
-
-            var target = UntypedBindingExpression.Create(data, o => o[1], typeof(object));
-
-            var value = await target.Take(1);
-
-            Assert.Equal(data[1], value);
-        }
-
-        private class NonIntegerIndexer : NotifyingBase
-        {
-            private readonly Dictionary<string, string> _storage = new Dictionary<string, string>();
-
-            public string this[string key]
-            {
-                get
-                {
-                    return _storage[key];
-                }
-                set
-                {
-                    _storage[key] = value;
-                    RaisePropertyChanged(CommonPropertyNames.IndexerName);
-                }
+                _storage[key] = value;
+                RaisePropertyChanged(CommonPropertyNames.IndexerName);
             }
         }
     }

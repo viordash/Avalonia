@@ -16,8 +16,9 @@ internal class ReflectionIndexerNode : CollectionNodeBase
 {
     private static readonly BindingFlags InstanceFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly;
     private readonly IList _arguments;
-    private PropertyInfo? _indexer;
-    private List<object?>? _indexes;
+    private MethodInfo? _getter;
+    private MethodInfo? _setter;
+    private object?[]? _indexes;
 
     public ReflectionIndexerNode(IList arguments)
     {
@@ -27,12 +28,9 @@ internal class ReflectionIndexerNode : CollectionNodeBase
     protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
         _indexes = null;
-        _indexer = GetIndexer(newSource?.GetType());
-
-        if (_indexer is not null)
-        {
-            _indexes = ConvertIndexes(_indexer.GetIndexParameters(), _arguments);
-        }
+        
+        if (GetIndexer(newSource?.GetType(), out _getter, out _setter))
+            _indexes = ConvertIndexes(_getter.GetParameters(), _arguments);
 
         base.OnSourceChanged(oldSource, newSource);
     }
@@ -54,10 +52,13 @@ internal class ReflectionIndexerNode : CollectionNodeBase
 
     protected override void UpdateValue(object? source)
     {
-        throw new NotImplementedException();
+        if (_getter is not null && _indexes is not null)
+            SetValue(_getter.Invoke(source, _indexes));
+        else
+            SetValue(AvaloniaProperty.UnsetValue);
     }
 
-    private static List<object?>? ConvertIndexes(ParameterInfo[] indexParameters, IList arguments)
+    private static object?[] ConvertIndexes(ParameterInfo[] indexParameters, IList arguments)
     {
         var result = new List<object?>();
 
@@ -73,26 +74,46 @@ internal class ReflectionIndexerNode : CollectionNodeBase
                     $"Could not convert list index '{i}' of type '{argument}' to '{type}'.");
         }
 
-        return result;
+        return result.ToArray();
     }
 
-    private static PropertyInfo? GetIndexer(Type? type)
+    private static bool GetIndexer(Type? type, [NotNullWhen(true)] out MethodInfo? getter, out MethodInfo? setter)
     {
-        for (; type != null; type = type.BaseType?.GetTypeInfo())
+        getter = setter = null;
+
+        if (type is null)
+            return false;
+
+        if (type.IsArray)
         {
-            // Check for the default indexer name first to make this faster.
-            // This will only be false when a class in VB has a custom indexer name.
-            if (type.GetProperty(CommonPropertyNames.IndexerName, BindingFlags.Instance) is { } indexer)
-                return indexer;
+            getter = type.GetMethod("Get");
+            setter = type.GetMethod("Set");
+            return getter is not null;
+        }
+
+        for (; type != null; type = type.BaseType)
+        {
+            // check for the default indexer name first to make this faster.
+            // this will only be false when a class in vb has a custom indexer name.
+            if (type.GetProperty(CommonPropertyNames.IndexerName, InstanceFlags) is { } indexer)
+            {
+                getter = indexer.GetMethod;
+                setter = indexer.SetMethod;
+                return getter is not null;
+            }
 
             foreach (var property in type.GetProperties(InstanceFlags))
             {
                 if (property.GetIndexParameters().Length > 0)
-                    return property;
+                {
+                    getter = property.GetMethod;
+                    setter = property.SetMethod;
+                    return getter is not null;
+                }
             }
         }
 
-        return null;
+        return false;
     }
 
 }
