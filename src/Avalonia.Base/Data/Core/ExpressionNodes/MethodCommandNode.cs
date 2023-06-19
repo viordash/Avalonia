@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Input;
 
 namespace Avalonia.Data.Core.ExpressionNodes;
@@ -27,6 +28,11 @@ internal class MethodCommandNode : ExpressionNode
 
     protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
+        if (oldSource is INotifyPropertyChanged oldInpc)
+            oldInpc.PropertyChanged -= OnPropertyChanged;
+        if (newSource is INotifyPropertyChanged newInpc)
+            newInpc.PropertyChanged += OnPropertyChanged;
+
         _command = null;
 
         if (newSource is not null)
@@ -37,6 +43,14 @@ internal class MethodCommandNode : ExpressionNode
         else
         {
             ClearValue();
+        }
+    }
+
+    private void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.PropertyName) || _dependsOnProperties.Contains(e.PropertyName))
+        {
+            _command?.RaiseCanExecuteChanged();
         }
     }
 

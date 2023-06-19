@@ -22,8 +22,10 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
             RawSource = rawSource;
         }
 
-        internal void BuildExpression(bool enableValidation, List<ExpressionNode> result)
+        internal void BuildExpression(List<ExpressionNode> result, out bool isRooted)
         {
+            isRooted = false;
+
             foreach (var element in _elements)
             {
                 ExpressionNode? node;
@@ -44,18 +46,22 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
                     ////case ArrayElementPathElement arr:
                     ////    node = new PropertyAccessorNode(CommonPropertyNames.IndexerName, enableValidation, new ArrayElementPlugin(arr.Indices, arr.ElementType));
                     ////    break;
-                    ////case VisualAncestorPathElement visualAncestor:
-                    ////    node = new FindVisualAncestorNode(visualAncestor.AncestorType, visualAncestor.Level);
-                    ////    break;
-                    ////case AncestorPathElement ancestor:
-                    ////    node = new FindAncestorNode(ancestor.AncestorType, ancestor.Level);
-                    ////    break;
-                    ////case SelfPathElement:
-                    ////    node = new SelfNode();
-                    ////    break;
-                    ////case ElementNameElement name:
-                    ////    node = new ElementNameNode(name.NameScope, name.Name);
-                    ////    break;
+                    case VisualAncestorPathElement visualAncestor:
+                        node = new VisualAncestorElementNode(visualAncestor.AncestorType, visualAncestor.Level);
+                        isRooted = true;
+                        break;
+                    case AncestorPathElement ancestor:
+                        node = new LogicalAncestorElementNode(ancestor.AncestorType, ancestor.Level);
+                        isRooted = true;
+                        break;
+                    case SelfPathElement:
+                        node = null;
+                        isRooted = true;
+                        break;
+                    case ElementNameElement name:
+                        node = new NamedElementNode(name.NameScope, name.Name);
+                        isRooted = true;
+                        break;
                     ////case IStronglyTypedStreamElement stream:
                     ////    node = new StreamNode(stream.CreatePlugin());
                     ////    break;

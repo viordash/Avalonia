@@ -1,10 +1,10 @@
 ﻿using System;
-using Avalonia.Data;
-using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
-using Avalonia.Data.Core;
-using Avalonia.Markup.Parsers;
 using System.Collections.Generic;
+using Avalonia.Data;
+using Avalonia.Data.Core;
 using Avalonia.Data.Core.ExpressionNodes;
+using Avalonia.Markup.Parsers;
+using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
 
 namespace Avalonia.Markup.Xaml.MarkupExtensions
 {
@@ -44,10 +44,12 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
             bool enableDataValidation = false)
         {
             var nodes = new List<ExpressionNode>();
-            Path.BuildExpression(false, nodes);
+            Path.BuildExpression(nodes, out var isRooted);
 
-            if (Source is null)
-                nodes.Insert(0, new DataContextNode());
+            if (Source is null && !isRooted)
+            {
+                nodes.Insert(0, ExpressionNodeFactory.CreateDataContext(targetProperty));
+            }
 
             var expression = new UntypedBindingExpression(
                 Source ?? target,

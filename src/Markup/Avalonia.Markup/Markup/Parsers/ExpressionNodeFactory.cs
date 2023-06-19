@@ -56,6 +56,13 @@ namespace Avalonia.Markup.Parsers
             };
         }
 
+        public static ExpressionNode CreateDataContext(AvaloniaProperty? targetProperty)
+        {
+            return targetProperty == StyledElement.DataContextProperty ? 
+                new ParentDataContextNode() :
+                new DataContextNode();
+        }
+
         private static AvaloniaPropertyAccessorNode AttachedPropertyNode(
             Func<string?, string, Type>? typeResolver,
             BindingExpressionGrammar.AttachedPropertyNameNode attached)

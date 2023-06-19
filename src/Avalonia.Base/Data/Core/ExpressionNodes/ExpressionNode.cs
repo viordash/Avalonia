@@ -87,7 +87,7 @@ internal abstract class ExpressionNode
         var oldSource = Source;
 
         if (source == AvaloniaProperty.UnsetValue)
-            _source = null;
+            source = null;
 
         if (source != oldSource)
         {
