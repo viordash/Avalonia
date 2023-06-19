@@ -108,13 +108,13 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
             if (node.Operand.Type.IsAssignableFrom(node.Type))
             {
                 // Ignore inheritance casts 
-                return _head = node;
+                return _head = base.VisitUnary(node);
             }
         }
         else if (node.NodeType == ExpressionType.TypeAs)
         {
             // Ignore as operator.
-            return _head = node;
+            return _head = base.VisitUnary(node);
         }
 
         throw new ExpressionParseException(0, $"Invalid expression type in binding expression: {node.NodeType}.");
