@@ -86,6 +86,11 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
             var expression = Expression.MakeIndex(node.Object, null, node.Arguments);
             return Add(node.Object, node, new ExpressionTreeIndexerNode(expression));
         }
+        else if (method.Name == StreamBindingExtensions.StreamBindingName)
+        {
+            Add(node.Arguments[0], node, new PluginStreamNode());
+            return node;
+        }
 
         throw new ExpressionParseException(0, $"Invalid method call in binding expression: '{node.Method.DeclaringType}.{node.Method.Name}'.");
     }
