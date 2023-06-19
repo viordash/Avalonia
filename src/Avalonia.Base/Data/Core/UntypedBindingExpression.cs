@@ -25,12 +25,10 @@ internal class UntypedBindingExpression : IObservable<object?>,
     private readonly IObservable<object?>? _sourceObservable;
     private readonly WeakReference<object?>? _source;
     private readonly IReadOnlyList<ExpressionNode> _nodes;
-    private readonly object? _fallbackValue;
-    private readonly IValueConverter? _converter;
-    private readonly object? _converterParameter;
     private readonly TargetTypeConverter? _targetTypeConverter;
     private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
+    private UncommonFields? _uncommon;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UntypedBindingExpression"/> class.
@@ -55,10 +53,19 @@ internal class UntypedBindingExpression : IObservable<object?>,
     {
         _source = new(source);
         _nodes = nodes;
-        _fallbackValue = fallbackValue;
-        _converter = converter;
-        _converterParameter = converterParameter;
         _targetTypeConverter = targetTypeConverter;
+
+        if (fallbackValue != AvaloniaProperty.UnsetValue ||
+            converter is not null ||
+            converterParameter is not null)
+        {
+            _uncommon = new()
+            {
+                _fallbackValue = fallbackValue,
+                _converter = converter,
+                _converterParameter = converterParameter,
+            };
+        }
 
         for (var i = 0; i < nodes.Count; ++i)
             nodes[i].SetOwner(this, i);
@@ -208,12 +215,12 @@ internal class UntypedBindingExpression : IObservable<object?>,
 
         var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
 
-        if (_converter is not null)
+        if (_uncommon?._converter is not null)
         {
-            value = _converter.Convert(
+            value = _uncommon?._converter.Convert(
                 value,
                 _targetTypeConverter?.TargetType ?? typeof(object),
-                _converterParameter,
+                _uncommon._converterParameter,
                 CultureInfo.InvariantCulture);
         }
 
@@ -223,8 +230,12 @@ internal class UntypedBindingExpression : IObservable<object?>,
         if (_targetTypeConverter is not null && value is not null)
             value = BindingNotification.ExtractValue(_targetTypeConverter.ConvertFrom(value));
 
-        if (_fallbackValue != AvaloniaProperty.UnsetValue && value == AvaloniaProperty.UnsetValue)
-            value = _fallbackValue;
+        if (_uncommon is not null &&
+            _uncommon._fallbackValue != AvaloniaProperty.UnsetValue &&
+            value == AvaloniaProperty.UnsetValue)
+        {
+            value = _uncommon._fallbackValue;
+        }
 
         _observer.OnNext(value);
     }
@@ -233,5 +244,12 @@ internal class UntypedBindingExpression : IObservable<object?>,
     {
         if (_nodes.Count > 0)
             _nodes[0].SetSource(source);
+    }
+
+    private class UncommonFields
+    {
+        public object? _fallbackValue;
+        public IValueConverter? _converter;
+        public object? _converterParameter;
     }
 }
