@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Data.Core;
@@ -23,58 +22,53 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
             RawSource = rawSource;
         }
 
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimmingMessages.CompiledBindingSafeSupressWarningMessage)]
-        internal ExpressionNode BuildExpression(bool enableValidation)
+        internal void BuildExpression(bool enableValidation, List<ExpressionNode> result)
         {
-            throw new NotImplementedException();
-            ////ExpressionNode? pathRoot = null;
-            ////ExpressionNode? path = null;
-            ////foreach (var element in _elements)
-            ////{
-            ////    ExpressionNode? node;
-            ////    switch (element)
-            ////    {
-            ////        case NotExpressionPathElement:
-            ////            node = new LogicalNotNode();
-            ////            break;
-            ////        case PropertyElement prop:
-            ////            node = new PropertyAccessorNode(prop.Property.Name, enableValidation, new PropertyInfoAccessorPlugin(prop.Property, prop.AccessorFactory));
-            ////            break;
-            ////        case MethodAsCommandElement methodAsCommand:
-            ////            node = new PropertyAccessorNode(methodAsCommand.MethodName, enableValidation, new CommandAccessorPlugin(methodAsCommand.ExecuteMethod, methodAsCommand.CanExecuteMethod, methodAsCommand.DependsOnProperties));
-            ////            break;
-            ////        case MethodAsDelegateElement methodAsDelegate:
-            ////            node = new PropertyAccessorNode(methodAsDelegate.Method.Name, enableValidation, new MethodAccessorPlugin(methodAsDelegate.Method, methodAsDelegate.DelegateType));
-            ////            break;
-            ////        case ArrayElementPathElement arr:
-            ////            node = new PropertyAccessorNode(CommonPropertyNames.IndexerName, enableValidation, new ArrayElementPlugin(arr.Indices, arr.ElementType));
-            ////            break;
-            ////        case VisualAncestorPathElement visualAncestor:
-            ////            node = new FindVisualAncestorNode(visualAncestor.AncestorType, visualAncestor.Level);
-            ////            break;
-            ////        case AncestorPathElement ancestor:
-            ////            node = new FindAncestorNode(ancestor.AncestorType, ancestor.Level);
-            ////            break;
-            ////        case SelfPathElement:
-            ////            node = new SelfNode();
-            ////            break;
-            ////        case ElementNameElement name:
-            ////            node = new ElementNameNode(name.NameScope, name.Name);
-            ////            break;
-            ////        case IStronglyTypedStreamElement stream:
-            ////            node = new StreamNode(stream.CreatePlugin());
-            ////            break;
-            ////        case ITypeCastElement typeCast:
-            ////            node = new StrongTypeCastNode(typeCast.Type, typeCast.Cast);
-            ////            break;
-            ////        default:
-            ////            throw new InvalidOperationException($"Unknown binding path element type {element.GetType().FullName}");
-            ////    }
+            foreach (var element in _elements)
+            {
+                ExpressionNode? node;
+                switch (element)
+                {
+                    case NotExpressionPathElement:
+                        node = new LogicalNotNode();
+                        break;
+                    case PropertyElement prop:
+                        node = new PropertyAccessorNode(prop.Property);
+                        break;
+                    case MethodAsCommandElement methodAsCommand:
+                        node = new MethodCommandNode(methodAsCommand.ExecuteMethod, methodAsCommand.CanExecuteMethod, methodAsCommand.DependsOnProperties);
+                        break;
+                    ////case MethodAsDelegateElement methodAsDelegate:
+                    ////    node = new PropertyAccessorNode(methodAsDelegate.Method.Name, enableValidation, new MethodAccessorPlugin(methodAsDelegate.Method, methodAsDelegate.DelegateType));
+                    ////    break;
+                    ////case ArrayElementPathElement arr:
+                    ////    node = new PropertyAccessorNode(CommonPropertyNames.IndexerName, enableValidation, new ArrayElementPlugin(arr.Indices, arr.ElementType));
+                    ////    break;
+                    ////case VisualAncestorPathElement visualAncestor:
+                    ////    node = new FindVisualAncestorNode(visualAncestor.AncestorType, visualAncestor.Level);
+                    ////    break;
+                    ////case AncestorPathElement ancestor:
+                    ////    node = new FindAncestorNode(ancestor.AncestorType, ancestor.Level);
+                    ////    break;
+                    ////case SelfPathElement:
+                    ////    node = new SelfNode();
+                    ////    break;
+                    ////case ElementNameElement name:
+                    ////    node = new ElementNameNode(name.NameScope, name.Name);
+                    ////    break;
+                    ////case IStronglyTypedStreamElement stream:
+                    ////    node = new StreamNode(stream.CreatePlugin());
+                    ////    break;
+                    ////case ITypeCastElement typeCast:
+                    ////    node = new StrongTypeCastNode(typeCast.Type, typeCast.Cast);
+                    ////    break;
+                    default:
+                        throw new InvalidOperationException($"Unknown binding path element type {element.GetType().FullName}");
+                }
 
-            ////    path = pathRoot is null ? (pathRoot = node) : path!.Next = node;
-            ////}
-
-            ////return pathRoot ?? new EmptyExpressionNode();
+                if (node is not null)
+                    result.Add(node);
+            }
         }
 
         internal IEnumerable<ICompiledBindingPathElement> Elements => _elements;
@@ -257,7 +251,7 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
     {
         public static readonly ObservableStreamPathElement<T> Instance = new ObservableStreamPathElement<T>();
 
-        public IStreamPlugin CreatePlugin() => new ObservableStreamPlugin<T>();
+        public IStreamPlugin CreatePlugin() => throw new NotImplementedException(); //new ObservableStreamPlugin<T>();
     }
 
     internal class SelfPathElement : ICompiledBindingPathElement, IControlSourceBindingPathElement

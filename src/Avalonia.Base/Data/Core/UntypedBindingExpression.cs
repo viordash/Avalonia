@@ -17,7 +17,6 @@ namespace Avalonia.Data.Core;
 /// A <see cref="UntypedBindingExpression"/> represents a untyped binding which has been
 /// instantiated on an object.
 /// </remarks>
-[RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
 internal class UntypedBindingExpression : IObservable<object?>,
     IObserver<object?>,
     IDisposable
@@ -89,6 +88,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="source">The source from which the binding value will be read.</param>
     /// <param name="expression">The expression representing the binding path.</param>
     /// <param name="targetType">The type to which produced values should be converted.</param>
+    [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
     public static UntypedBindingExpression Create<TIn, TOut>(
         TIn source,
         Expression<Func<TIn, TOut>> expression,
@@ -107,6 +107,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="source">An observable which produces the source from which the value will be read.</param>
     /// <param name="expression">The expression representing the binding path.</param>
     /// <param name="targetType">The type to which produced values should be converted.</param>
+    [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
     public static UntypedBindingExpression Create<TIn, TOut>(
         IObservable<TIn> source,
         Expression<Func<TIn, TOut>> expression,

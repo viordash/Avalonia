@@ -3,6 +3,8 @@ using Avalonia.Data;
 using Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings;
 using Avalonia.Data.Core;
 using Avalonia.Markup.Parsers;
+using System.Collections.Generic;
+using Avalonia.Data.Core.ExpressionNodes;
 
 namespace Avalonia.Markup.Xaml.MarkupExtensions
 {
@@ -41,44 +43,19 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
             object? anchor = null,
             bool enableDataValidation = false)
         {
-            throw new NotImplementedException();
+            var nodes = new List<ExpressionNode>();
+            Path.BuildExpression(false, nodes);
+
+            if (Source is null)
+                nodes.Insert(0, new DataContextNode());
+
+            var expression = new UntypedBindingExpression(
+                Source ?? target,
+                nodes,
+                targetProperty?.PropertyType ?? typeof(object));
+
+            return new InstancedBinding(expression, Mode, Priority);
         }
-
-        ////private protected override ExpressionObserver CreateExpressionObserver(AvaloniaObject target, AvaloniaProperty? targetProperty, object? anchor, bool enableDataValidation)
-        ////{
-        ////    if (Source != null)
-        ////    {
-        ////        return CreateSourceObserver(
-        ////            Source,
-        ////            Path.BuildExpression(enableDataValidation));
-        ////    }
-
-        ////    if (Path.RawSource != null)
-        ////    {
-        ////        return CreateSourceObserver(
-        ////            Path.RawSource,
-        ////            Path.BuildExpression(enableDataValidation));
-        ////    }
-
-        ////    if (Path.SourceMode == SourceMode.Data)
-        ////    {
-        ////        return CreateDataContextObserver(
-        ////            target,
-        ////            Path.BuildExpression(enableDataValidation),
-        ////            targetProperty == StyledElement.DataContextProperty,
-        ////            anchor);
-        ////    }
-        ////    else
-        ////    {
-        ////        var styledElement = target as StyledElement
-        ////            ?? anchor as StyledElement
-        ////            ?? throw new ArgumentException($"Cannot find a valid {nameof(StyledElement)} to use as the binding source.");
-
-        ////        return CreateSourceObserver(
-        ////            styledElement,
-        ////            Path.BuildExpression(enableDataValidation));
-        ////    }
-        ////}
 
         [ConstructorArgument("path")]
         public CompiledBindingPath Path { get; set; }

@@ -13,7 +13,7 @@ internal class LogicalNotNode : ExpressionNode
     private void UpdateValue(object? value)
     {
         if (value is null)
-            SetValue(AvaloniaProperty.UnsetValue);
+            ClearValue();
         else if (TryConvert(value, out var boolValue))
             SetValue(!boolValue);
         else

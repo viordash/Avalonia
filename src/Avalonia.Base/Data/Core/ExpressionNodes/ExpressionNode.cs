@@ -105,6 +105,11 @@ internal abstract class ExpressionNode
     public virtual bool WriteValueToSource(object? value) => false;
 
     /// <summary>
+    /// Sets the current value to <see cref="AvaloniaProperty.UnsetValue"/>.
+    /// </summary>
+    protected void ClearValue() => SetValue(AvaloniaProperty.UnsetValue);
+
+    /// <summary>
     /// Sets the current value to <see cref="AvaloniaProperty.UnsetValue"/> and notifies the
     /// <see cref="Owner"/> of the error.
     /// </summary>
@@ -112,7 +117,7 @@ internal abstract class ExpressionNode
     protected void SetError(string message)
     {
         // TODO: Implement
-        SetValue(AvaloniaProperty.UnsetValue);
+        ClearValue();
     }
 
     /// <summary>

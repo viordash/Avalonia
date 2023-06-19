@@ -67,7 +67,7 @@ internal class ReflectionIndexerNode : CollectionNodeBase
         if (_getter is not null && _indexes is not null)
             SetValue(_getter.Invoke(source, _indexes));
         else
-            SetValue(AvaloniaProperty.UnsetValue);
+            ClearValue();
     }
 
     private static object?[] ConvertIndexes(ParameterInfo[] indexParameters, IList arguments)
