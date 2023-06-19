@@ -65,9 +65,9 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions.CompiledBindings
                     ////case IStronglyTypedStreamElement stream:
                     ////    node = new StreamNode(stream.CreatePlugin());
                     ////    break;
-                    ////case ITypeCastElement typeCast:
-                    ////    node = new StrongTypeCastNode(typeCast.Type, typeCast.Cast);
-                    ////    break;
+                    case ITypeCastElement typeCast:
+                        node = new FuncTransformNode(typeCast.Cast);
+                        break;
                     default:
                         throw new InvalidOperationException($"Unknown binding path element type {element.GetType().FullName}");
                 }
