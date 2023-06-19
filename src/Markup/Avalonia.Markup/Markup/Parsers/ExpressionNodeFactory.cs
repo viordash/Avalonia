@@ -25,6 +25,7 @@ namespace Avalonia.Markup.Parsers
                 ExpressionNode? node = astNode switch
                 {
                     BindingExpressionGrammar.AncestorNode ancestor => LogicalAncestorNode(typeResolver, ancestor),
+                    BindingExpressionGrammar.AttachedPropertyNameNode attached => AttachedPropertyNode(typeResolver, attached),
                     BindingExpressionGrammar.NameNode name => new NamedElementNode(nameScope, name.Name),
                     BindingExpressionGrammar.NotNode => new LogicalNotNode(),
                     BindingExpressionGrammar.PropertyNameNode propName => new PluginPropertyAccessorNode(propName.PropertyName),
@@ -36,7 +37,7 @@ namespace Avalonia.Markup.Parsers
                     result.Add(node);
             }
         }
-        
+
         public static ExpressionNode? CreateRelativeSource(RelativeSource source, Func<string?, string, Type>? typeResolver)
         {
             return source.Mode switch
@@ -49,6 +50,16 @@ namespace Avalonia.Markup.Parsers
                 RelativeSourceMode.FindAncestor when source.Tree == TreeType.Visual =>
                     new VisualAncestorElementNode(source.AncestorType, source.AncestorLevel),
             };
+        }
+
+        private static AvaloniaPropertyAccessorNode AttachedPropertyNode(
+            Func<string?, string, Type>? typeResolver,
+            BindingExpressionGrammar.AttachedPropertyNameNode attached)
+        {
+            var type = LookupType(typeResolver, attached.Namespace, attached.TypeName);
+            var property = AvaloniaPropertyRegistry.Instance.FindRegistered(type, attached.PropertyName) ??
+                throw new InvalidOperationException($"Cannot find property {type}.{attached.PropertyName}.");
+            return new AvaloniaPropertyAccessorNode(property);
         }
 
         private static LogicalAncestorElementNode LogicalAncestorNode(

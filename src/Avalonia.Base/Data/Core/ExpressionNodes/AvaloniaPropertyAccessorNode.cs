@@ -1,9 +1,7 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Avalonia.Data.Core.ExpressionNodes;
 
-[RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
 internal class AvaloniaPropertyAccessorNode : ExpressionNode
 {
     private readonly EventHandler<AvaloniaPropertyChangedEventArgs> _onValueChanged;
