@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Avalonia.Data.Core.ExpressionNodes;
@@ -22,7 +23,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     private readonly IObservable<object?>? _sourceObservable;
     private readonly WeakReference<object?>? _source;
     private readonly IReadOnlyList<ExpressionNode> _nodes;
-    private readonly Func<object?, object?>? _targetTypeConverter;
+    private readonly TypeConverter? _targetTypeConverter;
     private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
 
@@ -37,7 +38,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     public UntypedBindingExpression(
         object? source,
         IReadOnlyList<ExpressionNode> nodes,
-        Func<object?, object?>? targetTypeConverter = null)
+        TypeConverter? targetTypeConverter = null)
     {
         _source = new(source);
         _nodes = nodes;
@@ -58,7 +59,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     public UntypedBindingExpression(
         IObservable<object?> source,
         IReadOnlyList<ExpressionNode> nodes,
-        Func<object?, object?>? targetTypeConverter = null)
+        TypeConverter? targetTypeConverter = null)
     {
         _sourceObservable = source;
         _nodes = nodes;
@@ -201,8 +202,8 @@ internal class UntypedBindingExpression : IObservable<object?>,
 
         var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
 
-        if (_targetTypeConverter is not null)
-            value = _targetTypeConverter(value);
+        if (_targetTypeConverter is not null && value is not null)
+            value = _targetTypeConverter.ConvertFrom(value);
 
         _observer.OnNext(value);
     }

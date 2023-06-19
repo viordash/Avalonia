@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO.Pipes;
@@ -83,7 +84,7 @@ namespace Avalonia.Data
             var expression = new UntypedBindingExpression(
                 Source ?? target,
                 nodes,
-                CreateTargetTypeConverter(targetProperty));
+                TargetTypeConverter.Create(targetProperty));
             return new InstancedBinding(expression, Mode, Priority);
         }
 
@@ -110,20 +111,6 @@ namespace Avalonia.Data
                 return ExpressionNodeFactory.CreateRelativeSource(RelativeSource);
 
             return new DataContextNode();
-        }
-
-        private static Func<object?, object?>? CreateTargetTypeConverter(AvaloniaProperty? targetProperty)
-        {
-            if (targetProperty is null)
-                return null;
-            return x => Convert(targetProperty.PropertyType, x);
-        }
-
-        private static object? Convert(Type targetType, object? value)
-        {
-            if (TypeUtilities.TryConvert(targetType, value, CultureInfo.InvariantCulture, out var convertedValue))
-                return convertedValue;
-            return AvaloniaProperty.UnsetValue;
         }
     }
 }
