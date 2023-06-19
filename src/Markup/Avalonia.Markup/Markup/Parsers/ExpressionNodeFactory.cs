@@ -49,9 +49,9 @@ namespace Avalonia.Markup.Parsers
                 RelativeSourceMode.TemplatedParent => new TemplatedParentNode(),
                 RelativeSourceMode.Self => null,
                 RelativeSourceMode.FindAncestor when source.Tree == TreeType.Logical =>
-                    new LogicalAncestorElementNode(source.AncestorType, source.AncestorLevel),
+                    new LogicalAncestorElementNode(source.AncestorType, source.AncestorLevel - 1),
                 RelativeSourceMode.FindAncestor when source.Tree == TreeType.Visual =>
-                    new VisualAncestorElementNode(source.AncestorType, source.AncestorLevel),
+                    new VisualAncestorElementNode(source.AncestorType, source.AncestorLevel - 1),
                 _ => throw new NotSupportedException("Unsupported RelativeSource mode.")
             };
         }
