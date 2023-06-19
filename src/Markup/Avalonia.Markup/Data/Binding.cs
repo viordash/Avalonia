@@ -78,7 +78,7 @@ namespace Avalonia.Data
                 ExpressionNodeFactory.CreateFromAst(astNodes, TypeResolver, GetNameScope(), nodes);
             }
 
-            if (CreateSourceNode() is { } sourceNode)
+            if (CreateSourceNode(targetProperty) is { } sourceNode)
                 nodes.Insert(0, sourceNode);
 
             var expression = new UntypedBindingExpression(
@@ -95,7 +95,7 @@ namespace Avalonia.Data
             return result;
         }
 
-        private ExpressionNode? CreateSourceNode()
+        private ExpressionNode? CreateSourceNode(AvaloniaProperty? targetProperty)
         {
             if (Source is not null)
                 return null;
@@ -109,6 +109,9 @@ namespace Avalonia.Data
 
             if (RelativeSource is not null)
                 return ExpressionNodeFactory.CreateRelativeSource(RelativeSource);
+
+            if (targetProperty == StyledElement.DataContextProperty)
+                return new ParentDataContextNode();
 
             return new DataContextNode();
         }

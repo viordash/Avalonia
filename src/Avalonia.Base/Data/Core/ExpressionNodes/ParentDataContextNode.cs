@@ -8,7 +8,8 @@ namespace Avalonia.Data.Core.ExpressionNodes;
 /// </summary>
 internal class ParentDataContextNode : ExpressionNode
 {
-    private AvaloniaObject? _parent;
+    private static AvaloniaObject s_Unset = new();
+    private AvaloniaObject? _parent = s_Unset;
 
     protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
@@ -35,6 +36,10 @@ internal class ParentDataContextNode : ExpressionNode
         {
             _parent.PropertyChanged += OnParentPropertyChanged;
             SetValue(_parent.GetValue(StyledElement.DataContextProperty));
+        }
+        else
+        {
+            SetValue(null);
         }
     }
 
