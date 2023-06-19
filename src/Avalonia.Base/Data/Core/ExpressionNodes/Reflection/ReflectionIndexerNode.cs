@@ -25,6 +25,18 @@ internal class ReflectionIndexerNode : CollectionNodeBase
         _arguments = arguments;
     }
 
+    public override bool WriteValueToSource(object? value)
+    {
+        if (Source is null || _setter is null)
+            return false;
+
+        var args = new object?[_indexes!.Length + 1];
+        _indexes.CopyTo(args, 0);
+        args[_indexes.Length] = value;
+        _setter.Invoke(Source, args);
+        return true;
+    }
+
     protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
         _indexes = null;

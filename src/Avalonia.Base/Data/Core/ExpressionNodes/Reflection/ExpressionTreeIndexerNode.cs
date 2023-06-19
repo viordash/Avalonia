@@ -24,6 +24,14 @@ internal sealed class ExpressionTreeIndexerNode : CollectionNodeBase
         _firstArgumentDelegate = Expression.Lambda(_expression.Arguments[0], _parameter).Compile();
     }
 
+    public override bool WriteValueToSource(object? value)
+    {
+        if (Source is null)
+            return false;
+        _setDelegate.DynamicInvoke(Source, value);
+        return true;
+    }
+
     protected override bool ShouldUpdate(object? sender, PropertyChangedEventArgs e)
     {
         return _expression.Indexer == null || _expression.Indexer.Name == e.PropertyName;
@@ -50,13 +58,5 @@ internal sealed class ExpressionTreeIndexerNode : CollectionNodeBase
         {
             SetError(e);
         }
-    }
-
-    public override bool WriteValueToSource(object? value)
-    {
-        if (Source is null)
-            return false;
-        _setDelegate.DynamicInvoke(Source, value);
-        return true;
     }
 }
