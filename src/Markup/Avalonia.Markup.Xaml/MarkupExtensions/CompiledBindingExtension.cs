@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Avalonia.Data;
+using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Markup.Parsers;
@@ -54,7 +55,9 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
             var expression = new UntypedBindingExpression(
                 Source ?? target,
                 nodes,
-                FallbackValue);
+                FallbackValue,
+                converter: Converter,
+                converterParameter: ConverterParameter);
 
             return new InstancedBinding(expression, Mode, Priority);
         }
