@@ -359,7 +359,7 @@ public abstract class UntypedBindingExpressionTests_Indexer
             var nodes = new List<ExpressionNode>();
             ExpressionNodeFactory.CreateFromAst(astNodes, null, null, nodes);
 
-            return new UntypedBindingExpression(data, nodes, typeof(object));
+            return new UntypedBindingExpression(data, nodes);
         }
     }
 

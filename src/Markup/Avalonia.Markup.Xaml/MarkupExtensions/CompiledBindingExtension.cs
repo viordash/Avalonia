@@ -53,8 +53,7 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
 
             var expression = new UntypedBindingExpression(
                 Source ?? target,
-                nodes,
-                targetProperty?.PropertyType ?? typeof(object));
+                nodes);
 
             return new InstancedBinding(expression, Mode, Priority);
         }

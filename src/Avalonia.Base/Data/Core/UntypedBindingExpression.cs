@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq.Expressions;
 using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Data.Core.Parsers;
 using Avalonia.Reactive;
-using Avalonia.Utilities;
 
 namespace Avalonia.Data.Core;
 
@@ -24,7 +22,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     private readonly IObservable<object?>? _sourceObservable;
     private readonly WeakReference<object?>? _source;
     private readonly IReadOnlyList<ExpressionNode> _nodes;
-    private readonly Type _targetType;
+    private readonly Func<object?, object?>? _targetTypeConverter;
     private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
 
@@ -33,15 +31,17 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// </summary>
     /// <param name="source">The source from which the value will be read.</param>
     /// <param name="nodes">The nodes representing the binding path.</param>
-    /// <param name="targetType">The type to which produced values should be converted.</param>
+    /// <param name="targetTypeConverter">
+    /// A final type converter to be run on the produced value.
+    /// </param>
     public UntypedBindingExpression(
         object? source,
         IReadOnlyList<ExpressionNode> nodes,
-        Type targetType)
+        Func<object?, object?>? targetTypeConverter = null)
     {
         _source = new(source);
         _nodes = nodes;
-        _targetType = targetType;
+        _targetTypeConverter = targetTypeConverter;
 
         for (var i = 0; i < nodes.Count; ++i)
             nodes[i].SetOwner(this, i);
@@ -52,15 +52,17 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// </summary>
     /// <param name="source">An observable which produces the source from which the value will be read.</param>
     /// <param name="nodes">The nodes representing the binding path.</param>
-    /// <param name="targetType">The type to which produced values should be converted.</param>
+    /// <param name="targetTypeConverter">
+    /// A final type converter to be run on the produced value.
+    /// </param>
     public UntypedBindingExpression(
         IObservable<object?> source,
         IReadOnlyList<ExpressionNode> nodes,
-        Type targetType)
+        Func<object?, object?>? targetTypeConverter = null)
     {
         _sourceObservable = source;
         _nodes = nodes;
-        _targetType = targetType;
+        _targetTypeConverter = targetTypeConverter;
 
         for (var i = 0; i < nodes.Count; ++i)
             nodes[i].SetOwner(this, i);
@@ -96,7 +98,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
             where TIn : class?
     {
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
-        return new UntypedBindingExpression(source, nodes, targetType);
+        return new UntypedBindingExpression(source, nodes);
     }
 
     /// <summary>
@@ -115,7 +117,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
             where TIn : class?
     {
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
-        return new UntypedBindingExpression(source, nodes, targetType);
+        return new UntypedBindingExpression(source, nodes);
     }
 
     /// <summary>
@@ -198,11 +200,11 @@ internal class UntypedBindingExpression : IObservable<object?>,
             return;
 
         var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
-        
-        if (TypeUtilities.TryConvert(_targetType, value, CultureInfo.InvariantCulture, out var convertedValue))
-        {
-            _observer.OnNext(convertedValue);
-        }
+
+        if (_targetTypeConverter is not null)
+            value = _targetTypeConverter(value);
+
+        _observer.OnNext(value);
     }
 
     private void OnSourceChanged(object? source)
