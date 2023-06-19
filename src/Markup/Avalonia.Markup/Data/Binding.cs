@@ -88,6 +88,7 @@ namespace Avalonia.Data
                 FallbackValue,
                 converter: Converter,
                 converterParameter: ConverterParameter,
+                stringFormat: StringFormat,
                 targetTypeConverter: ReflectionTargetTypeConverter.Create(targetProperty));
             return new InstancedBinding(expression, Mode, Priority);
         }

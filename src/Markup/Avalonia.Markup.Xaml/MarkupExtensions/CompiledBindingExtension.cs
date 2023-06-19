@@ -58,6 +58,7 @@ namespace Avalonia.Markup.Xaml.MarkupExtensions
                 FallbackValue,
                 converter: Converter,
                 converterParameter: ConverterParameter,
+                stringFormat: StringFormat,
                 targetTypeConverter: TargetTypeConverter.Create(targetProperty));
 
             return new InstancedBinding(expression, Mode, Priority);

@@ -40,6 +40,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// </param>
     /// <param name="converter">The converter to use.</param>
     /// <param name="converterParameter">The converter parameter.</param>
+    /// <param name="stringFormat">The format string to use.</param>
     /// <param name="targetTypeConverter">
     /// A final type converter to be run on the produced value.
     /// </param>
@@ -49,6 +50,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
         object? fallbackValue,
         IValueConverter? converter = null,
         object? converterParameter = null,
+        string? stringFormat = null,
         TargetTypeConverter? targetTypeConverter = null)
     {
         _source = new(source);
@@ -57,19 +59,31 @@ internal class UntypedBindingExpression : IObservable<object?>,
 
         if (fallbackValue != AvaloniaProperty.UnsetValue ||
             converter is not null ||
-            converterParameter is not null)
+            converterParameter is not null ||
+            !string.IsNullOrWhiteSpace(stringFormat))
         {
             _uncommon = new()
             {
                 _fallbackValue = fallbackValue,
                 _converter = converter,
                 _converterParameter = converterParameter,
+                _stringFormat = stringFormat switch
+                {
+                    string s when string.IsNullOrWhiteSpace(s) => null,
+                    string s when !s.Contains('{') => $"{{0:{stringFormat}}}",
+                    _ => stringFormat,
+                },
             };
         }
 
         for (var i = 0; i < nodes.Count; ++i)
             nodes[i].SetOwner(this, i);
     }
+
+    private Type TargetType => _targetTypeConverter?.TargetType ?? typeof(object);
+    private IValueConverter? Converter => _uncommon?._converter;
+    private object? ConverterParameter => _uncommon?._converterParameter;
+    private string? StringFormat => _uncommon?._stringFormat;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UntypedBindingExpression"/> class.
@@ -215,20 +229,25 @@ internal class UntypedBindingExpression : IObservable<object?>,
 
         var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
 
-        if (_uncommon?._converter is not null)
+        if (Converter is { } converter)
         {
-            value = _uncommon?._converter.Convert(
+            value = converter.Convert(
                 value,
                 _targetTypeConverter?.TargetType ?? typeof(object),
-                _uncommon._converterParameter,
+                ConverterParameter,
                 CultureInfo.InvariantCulture);
         }
 
         if (value == BindingOperations.DoNothing)
             return;
 
-        if (_targetTypeConverter is not null && value is not null)
-            value = BindingNotification.ExtractValue(_targetTypeConverter.ConvertFrom(value));
+        if (value != AvaloniaProperty.UnsetValue)
+        {
+            if (StringFormat is { } stringFormat && (TargetType == typeof(object) || TargetType == typeof(string)))
+                value = string.Format(CultureInfo.CurrentCulture, stringFormat, value);
+            else if (_targetTypeConverter is not null && value is not null)
+                value = BindingNotification.ExtractValue(_targetTypeConverter.ConvertFrom(value));
+            }
 
         if (_uncommon is not null &&
             _uncommon._fallbackValue != AvaloniaProperty.UnsetValue &&
@@ -251,5 +270,6 @@ internal class UntypedBindingExpression : IObservable<object?>,
         public object? _fallbackValue;
         public IValueConverter? _converter;
         public object? _converterParameter;
+        public string? _stringFormat;
     }
 }
