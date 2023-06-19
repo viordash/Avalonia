@@ -70,18 +70,21 @@ namespace Avalonia.Base.UnitTests.Data.Core
             GC.KeepAlive(data);
         }
 
-        ////[Fact]
-        ////public void Should_Convert_Set_Double_To_String()
-        ////{
-        ////    var data = new Class1 { DoubleValue = 5.6 };
-        ////    var target = new BindingExpression(UntypedBindingExpression.Create(data, o => o.DoubleValue), typeof(string));
+        [Fact]
+        public void Should_Convert_Set_Double_To_String()
+        {
+            var data = new Class1 { DoubleValue = 5.6 };
+            var target = UntypedBindingExpression.Create(data, o => o.DoubleValue, typeof(string));
 
-        ////    target.OnNext($"{6.7}");
+            using (target.Subscribe(x => { }))
+            {
+                target.SetValue($"{6.7}");
+            }
 
-        ////    Assert.Equal(6.7, data.DoubleValue);
+            Assert.Equal(6.7, data.DoubleValue);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
         ////[Fact]
         ////public async Task Should_Return_BindingNotification_With_FallbackValue_For_NonConvertibe_Target_Value()

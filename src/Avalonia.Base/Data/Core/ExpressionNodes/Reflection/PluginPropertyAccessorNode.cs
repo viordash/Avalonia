@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using Avalonia.Data.Core.Plugins;
+using Avalonia.Utilities;
 
 namespace Avalonia.Data.Core.ExpressionNodes.Reflection;
 
@@ -20,7 +22,13 @@ internal class PluginPropertyAccessorNode : ExpressionNode
 
     public override bool WriteValueToSource(object? value)
     {
-        return _accessor?.SetValue(value, BindingPriority.LocalValue) ?? false;
+        if (_accessor?.PropertyType is { } targetType &&
+            TypeUtilities.TryConvert(targetType, value, CultureInfo.InvariantCulture, out var convertedValue))
+        {
+            return _accessor.SetValue(convertedValue, BindingPriority.LocalValue);
+        }
+
+        return false;
     }
 
     protected override void OnSourceChanged(object? oldSource, object? newSource)
