@@ -12,7 +12,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Negate_Boolean_Value()
         {
             var data = new { Foo = true };
-            var target = UntypedBindingExpression.Create(data, o => !o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => !o.Foo);
             var result = await target.Take(1);
 
             Assert.False((bool)result);

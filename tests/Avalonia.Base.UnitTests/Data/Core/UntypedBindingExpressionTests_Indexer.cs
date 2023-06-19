@@ -313,7 +313,7 @@ public abstract class UntypedBindingExpressionTests_Indexer
     {
         var data = new[] { 1, 2, 3 };
 
-        var target = UntypedBindingExpression.Create(data, o => o[1], typeof(object));
+        var target = UntypedBindingExpression.Create(data, o => o[1]);
 
         var value = await target.Take(1);
 
@@ -330,7 +330,7 @@ public abstract class UntypedBindingExpressionTests_Indexer
             TIn data,
             Expression<Func<TIn, TOut>> expression)
         {
-            return UntypedBindingExpression.Create(data, expression, typeof(object));
+            return UntypedBindingExpression.Create(data, expression);
         }
     }
 

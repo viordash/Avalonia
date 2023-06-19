@@ -19,7 +19,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Get_Simple_Property_Value()
         {
             var data = new { Foo = "foo" };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo);
             var result = await target.Take(1);
 
             Assert.Equal("foo", result);
@@ -31,7 +31,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Get_Simple_Property_Value_Null()
         {
             var data = new { Foo = (string)null };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo);
             var result = await target.Take(1);
 
             Assert.Null(result);
@@ -43,7 +43,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Get_Simple_Property_From_Base_Class()
         {
             var data = new Class3 { Foo = "foo" };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo);
             var result = await target.Take(1);
 
             Assert.Equal("foo", result);
@@ -112,7 +112,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Get_Simple_Property_Chain()
         {
             var data = new { Foo = new { Bar = new { Baz = "baz" } } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo.Bar.Baz, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo.Bar.Baz);
             var result = await target.Take(1);
 
             Assert.Equal("baz", result);
@@ -159,7 +159,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Track_Simple_Property_Value()
         {
             var data = new Class1 { Foo = "foo" };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo);
             var result = new List<object>();
 
             var sub = target.Subscribe(x => result.Add(x));
@@ -214,7 +214,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Track_End_Of_Property_Chain_Changing()
         {
             var data = new Class1 { Next = new Class2 { Bar = "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
             var result = new List<object>();
 
             var sub = target.Subscribe(x => result.Add(x));
@@ -237,7 +237,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Track_Property_Chain_Changing()
         {
             var data = new Class1 { Next = new Class2 { Bar = "bar" } };
-            var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => (o.Next as Class2).Bar);
             var result = new List<object>();
 
             var sub = target.Subscribe(x => result.Add(x));
@@ -367,7 +367,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             var source = scheduler.CreateColdObservable(
                 OnNext(1, new Class1 { Foo = "foo" }),
                 OnNext(2, new Class1 { Foo = "bar" }));
-            var target = UntypedBindingExpression.Create(source, o => o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(source, o => o.Foo);
             var result = new List<object>();
 
             using (target.Subscribe(x => result.Add(x)))
@@ -468,7 +468,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             Func<Tuple<UntypedBindingExpression, WeakReference>> run = () =>
             {
                 var source = new Class1 { Foo = "foo" };
-                var target = UntypedBindingExpression.Create(source, o => o.Foo, typeof(object));
+                var target = UntypedBindingExpression.Create(source, o => o.Foo);
                 return Tuple.Create(target, new WeakReference(source));
             };
 
@@ -525,7 +525,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         {
             // Repro of https://github.com/AvaloniaUI/Avalonia/issues/4733.
             var source = new MyViewModel();
-            var target = UntypedBindingExpression.Create(source, x => x.Name, typeof(object));
+            var target = UntypedBindingExpression.Create(source, x => x.Name);
             var result = new List<object>();
 
             target.Subscribe(x => result.Add(x));

@@ -13,7 +13,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Get_Source_Value()
         {
             var data = "foo";
-            var target = UntypedBindingExpression.Create(data, o => o, typeof(string));
+            var target = UntypedBindingExpression.Create(data, o => o);
             var result = await target.Take(1);
 
             Assert.Equal("foo", result);
@@ -25,7 +25,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Convert_String_To_Double()
         {
             var data = new Class1 { StringValue = $"{5.6}" };
-            var target = UntypedBindingExpression.Create(data, o => o.StringValue, typeof(double));
+            var target = UntypedBindingExpression.Create(data, o => o.StringValue);
             var result = await target.Take(1);
 
             Assert.Equal(5.6, result);
@@ -62,7 +62,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Convert_Double_To_String()
         {
             var data = new Class1 { DoubleValue = 5.6 };
-            var target = UntypedBindingExpression.Create(data, o => o.DoubleValue, typeof(string));
+            var target = UntypedBindingExpression.Create(data, o => o.DoubleValue);
             var result = await target.Take(1);
 
             Assert.Equal($"{5.6}", result);
@@ -74,7 +74,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Convert_Set_Double_To_String()
         {
             var data = new Class1 { DoubleValue = 5.6 };
-            var target = UntypedBindingExpression.Create(data, o => o.DoubleValue, typeof(string));
+            var target = UntypedBindingExpression.Create(data, o => o.DoubleValue);
 
             using (target.Subscribe(x => { }))
             {

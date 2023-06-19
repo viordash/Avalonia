@@ -19,7 +19,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             {
                 var tcs = new TaskCompletionSource<string>();
                 var data = new { Foo = tcs.Task };
-                var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+                var target = UntypedBindingExpression.Create(data, o => o.Foo);
                 var result = new List<object>();
 
                 var sub = target.Subscribe(x => result.Add(x));
@@ -39,7 +39,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             using (var sync = UnitTestSynchronizationContext.Begin())
             {
                 var data = new { Foo = Task.FromResult("foo") };
-                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding(), typeof(object));
+                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding());
                 var result = new List<object>();
 
                 var sub = target.Subscribe(x => result.Add(x));
@@ -57,7 +57,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             {
                 var tcs = new TaskCompletionSource<Class2>();
                 var data = new Class1(tcs.Task);
-                var target = UntypedBindingExpression.Create(data, o => o.Next.StreamBinding().Foo, typeof(object));
+                var target = UntypedBindingExpression.Create(data, o => o.Next.StreamBinding().Foo);
                 var result = new List<object>();
 
                 var sub = target.Subscribe(x => result.Add(x));
@@ -77,7 +77,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             {
                 var tcs = new TaskCompletionSource<string>();
                 var data = new { Foo = tcs.Task };
-                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding(), typeof(object));
+                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding());
                 var result = new List<object>();
 
                 var sub = target.Subscribe(x => result.Add(x));
@@ -103,7 +103,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             using (var sync = UnitTestSynchronizationContext.Begin())
             {
                 var data = new { Foo = TaskFromException(new NotSupportedException()) };
-                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding(), typeof(object));
+                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding());
                 var result = new List<object>();
 
                 var sub = target.Subscribe(x => result.Add(x));
@@ -128,7 +128,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             {
                 var tcs = new TaskCompletionSource<string>();
                 var data = new { Foo = tcs.Task };
-                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding(), typeof(object));
+                var target = UntypedBindingExpression.Create(data, o => o.Foo.StreamBinding());
                 var result = new List<object>();
 
                 var sub = target.Subscribe(x => result.Add(x));

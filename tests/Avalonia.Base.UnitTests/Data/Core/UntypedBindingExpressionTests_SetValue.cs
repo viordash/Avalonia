@@ -15,7 +15,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Set_Simple_Property_Value()
         {
             var data = new Person { Name = "Frank" };
-            var target = UntypedBindingExpression.Create(data, o => o.Name, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Name);
 
             using (target.Subscribe(_ => { }))
             {
@@ -29,7 +29,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Set_Attached_Property_Value()
         {
             var data = new AvaloniaObject();
-            var target = UntypedBindingExpression.Create(data, o => o[DockPanel.DockProperty], typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o[DockPanel.DockProperty]);
 
             using (target.Subscribe(_ => { }))
             {
@@ -43,7 +43,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Set_Indexed_Value()
         {
             var data = new { Foo = new[] { "foo" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Foo[0], typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo[0]);
 
             using (target.Subscribe(_ => { }))
             {
@@ -59,7 +59,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Set_Value_On_Simple_Property_Chain()
         {
             var data = new Person { Pet = new Dog { Name = "Fido" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Pet.Name, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Pet.Name);
 
             using (target.Subscribe(_ => { }))
             {
@@ -73,7 +73,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Not_Try_To_Set_Value_On_Broken_Chain()
         {
             var data = new Person { Pet = new Dog { Name = "Fido" } };
-            var target = UntypedBindingExpression.Create(data, o => o.Pet.Name, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Pet.Name);
 
             // Ensure the UntypedBindingExpression's subscriptions are kept active.
             using (target.OfType<string>().Subscribe(x => { }))
@@ -87,7 +87,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void SetValue_Should_Return_False_For_Missing_Property()
         {
             var data = new Person { Pet = new Cat() };
-            var target = UntypedBindingExpression.Create(data, o => (o.Pet as Dog).IsBarky, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => (o.Pet as Dog).IsBarky);
 
             using (target.Subscribe(_ => { }))
             {
@@ -101,7 +101,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void SetValue_Should_Notify_New_Value_With_Inpc()
         {
             var data = new Person();
-            var target = UntypedBindingExpression.Create(data, o => o.Name, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Name);
             var result = new List<object>();
 
             target.Subscribe(result.Add);
@@ -116,7 +116,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void SetValue_Should_Notify_New_Value_Without_Inpc()
         {
             var data = new Snail();
-            var target = UntypedBindingExpression.Create(data, o => o.Name, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Name);
             var result = new List<object>();
 
             target.Subscribe(result.Add);
@@ -131,7 +131,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void SetValue_Should_Return_False_For_Missing_Object()
         {
             var data = new Person();
-            var target = UntypedBindingExpression.Create(data, o => (o.Pet as Dog).Name, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => (o.Pet as Dog).Name);
 
             using (target.Subscribe(_ => { }))
             {
@@ -153,7 +153,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         {
             var data = new Person { Pet = new Dog { Name = "Fido" } };
             var rootObservable = new BehaviorSubject<Person>(data);
-            var target = UntypedBindingExpression.Create(rootObservable, o => o.Pet.Name, typeof(object));
+            var target = UntypedBindingExpression.Create(rootObservable, o => o.Pet.Name);
 
             using (target.Subscribe(_ => { }))
             {

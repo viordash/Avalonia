@@ -90,12 +90,10 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <typeparam name="TOut">The output type of the binding expression.</typeparam>
     /// <param name="source">The source from which the binding value will be read.</param>
     /// <param name="expression">The expression representing the binding path.</param>
-    /// <param name="targetType">The type to which produced values should be converted.</param>
     [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
     public static UntypedBindingExpression Create<TIn, TOut>(
         TIn source,
-        Expression<Func<TIn, TOut>> expression,
-        Type targetType)
+        Expression<Func<TIn, TOut>> expression)
             where TIn : class?
     {
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
@@ -109,12 +107,10 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <typeparam name="TOut">The output type of the binding expression.</typeparam>
     /// <param name="source">An observable which produces the source from which the value will be read.</param>
     /// <param name="expression">The expression representing the binding path.</param>
-    /// <param name="targetType">The type to which produced values should be converted.</param>
     [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
     public static UntypedBindingExpression Create<TIn, TOut>(
         IObservable<TIn> source,
-        Expression<Func<TIn, TOut>> expression,
-        Type targetType)
+        Expression<Func<TIn, TOut>> expression)
             where TIn : class?
     {
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);

@@ -20,7 +20,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Get_Simple_Property_Value()
         {
             var data = new Class1();
-            var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo);
             var result = await target.Take(1);
 
             Assert.Equal("foo", result);
@@ -32,7 +32,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public async Task Should_Get_Simple_ClrProperty_Value()
         {
             var data = new Class1();
-            var target = UntypedBindingExpression.Create(data, o => o.ClrProperty, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.ClrProperty);
             var result = await target.Take(1);
 
             Assert.Equal("clr-property", result);
@@ -42,7 +42,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
         public void Should_Track_Simple_Property_Value()
         {
             var data = new Class1();
-            var target = UntypedBindingExpression.Create(data, o => o.Foo, typeof(object));
+            var target = UntypedBindingExpression.Create(data, o => o.Foo);
             var result = new List<object>();
 
             var sub = target.Subscribe(x => result.Add(x));
@@ -61,7 +61,7 @@ namespace Avalonia.Base.UnitTests.Data.Core
             Func<Tuple<UntypedBindingExpression, WeakReference>> run = () =>
             {
                 var source = new Class1();
-                var target = UntypedBindingExpression.Create(source, o => o.Foo, typeof(object));
+                var target = UntypedBindingExpression.Create(source, o => o.Foo);
                 return Tuple.Create(target, new WeakReference(source));
             };
 
