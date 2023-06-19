@@ -38,7 +38,7 @@ namespace Avalonia.Markup.Parsers
             }
         }
 
-        public static ExpressionNode? CreateRelativeSource(RelativeSource source, Func<string?, string, Type>? typeResolver)
+        public static ExpressionNode? CreateRelativeSource(RelativeSource source)
         {
             return source.Mode switch
             {
@@ -49,6 +49,7 @@ namespace Avalonia.Markup.Parsers
                     new LogicalAncestorElementNode(source.AncestorType, source.AncestorLevel),
                 RelativeSourceMode.FindAncestor when source.Tree == TreeType.Visual =>
                     new VisualAncestorElementNode(source.AncestorType, source.AncestorLevel),
+                _ => throw new NotSupportedException("Unsupported RelativeSource mode.")
             };
         }
 

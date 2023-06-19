@@ -104,7 +104,7 @@ namespace Avalonia.Data
             }
 
             if (RelativeSource is not null)
-                return ExpressionNodeFactory.CreateRelativeSource(RelativeSource, TypeResolver);
+                return ExpressionNodeFactory.CreateRelativeSource(RelativeSource);
 
             return new DataContextNode();
         }
