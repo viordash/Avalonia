@@ -24,13 +24,6 @@ internal sealed class ExpressionTreeIndexerNode : CollectionNodeBase
         _firstArgumentDelegate = Expression.Lambda(_expression.Arguments[0], _parameter).Compile();
     }
 
-    protected override void OnSourceChanged(object? oldSource, object? newSource)
-    {
-        Unsubscribe(oldSource);
-        Subscribe(newSource);
-        UpdateValue(newSource);
-    }
-
     protected override bool ShouldUpdate(object? sender, PropertyChangedEventArgs e)
     {
         return _expression.Indexer == null || _expression.Indexer.Name == e.PropertyName;

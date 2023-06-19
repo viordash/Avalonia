@@ -21,20 +21,11 @@ internal abstract class CollectionNodeBase : ExpressionNode,
             UpdateValue(sender);
     }
 
-    protected void Subscribe(object? source)
+    protected override void OnSourceChanged(object? oldSource, object? newSource)
     {
-        if (source is INotifyCollectionChanged incc)
-            WeakEvents.CollectionChanged.Subscribe(incc, this);
-        if (source is INotifyPropertyChanged inpc)
-            WeakEvents.ThreadSafePropertyChanged.Subscribe(inpc, this);
-    }
-
-    protected void Unsubscribe(object? source)
-    {
-        if (source is INotifyCollectionChanged incc)
-            WeakEvents.CollectionChanged.Unsubscribe(incc, this);
-        if (source is INotifyPropertyChanged inpc)
-            WeakEvents.ThreadSafePropertyChanged.Unsubscribe(inpc, this);
+        Unsubscribe(oldSource);
+        Subscribe(newSource);
+        UpdateValue(newSource);
     }
 
     protected abstract bool ShouldUpdate(object? sender, PropertyChangedEventArgs e);
@@ -64,5 +55,21 @@ internal abstract class CollectionNodeBase : ExpressionNode,
 
         // Implementation defined meaning for the index, so just try to update anyway
         return true;
+    }
+
+    private void Subscribe(object? source)
+    {
+        if (source is INotifyCollectionChanged incc)
+            WeakEvents.CollectionChanged.Subscribe(incc, this);
+        if (source is INotifyPropertyChanged inpc)
+            WeakEvents.ThreadSafePropertyChanged.Subscribe(inpc, this);
+    }
+
+    private void Unsubscribe(object? source)
+    {
+        if (source is INotifyCollectionChanged incc)
+            WeakEvents.CollectionChanged.Unsubscribe(incc, this);
+        if (source is INotifyPropertyChanged inpc)
+            WeakEvents.ThreadSafePropertyChanged.Unsubscribe(inpc, this);
     }
 }

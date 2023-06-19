@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
@@ -27,6 +28,7 @@ namespace Avalonia.Markup.Parsers
                     BindingExpressionGrammar.AncestorNode ancestor => LogicalAncestorNode(typeResolver, ancestor),
                     BindingExpressionGrammar.AttachedPropertyNameNode attached => AttachedPropertyNode(typeResolver, attached),
                     BindingExpressionGrammar.EmptyExpressionNode => null,
+                    BindingExpressionGrammar.IndexerNode indexer => new ReflectionIndexerNode((IList)indexer.Arguments),
                     BindingExpressionGrammar.NameNode name => new NamedElementNode(nameScope, name.Name),
                     BindingExpressionGrammar.NotNode => new LogicalNotNode(),
                     BindingExpressionGrammar.PropertyNameNode propName => new PluginPropertyAccessorNode(propName.PropertyName),

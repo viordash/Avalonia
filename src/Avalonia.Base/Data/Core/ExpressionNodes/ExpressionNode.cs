@@ -92,8 +92,7 @@ internal abstract class ExpressionNode
         if (source != oldSource)
         {
             _source = new(source);
-            try
-            { OnSourceChanged(oldSource, source); }
+            try { OnSourceChanged(oldSource, source); }
             catch (Exception e) { SetError(e); }
         }
     }
