@@ -22,11 +22,9 @@ internal class UntypedBindingExpression : IObservable<object?>,
     IObserver<object?>,
     IDisposable
 {
-    private readonly IObservable<object?>? _sourceObservable;
     private readonly WeakReference<object?>? _source;
     private readonly IReadOnlyList<ExpressionNode> _nodes;
     private readonly TargetTypeConverter? _targetTypeConverter;
-    private IDisposable? _sourceSubscription;
     private IObserver<object?>? _observer;
     private UncommonFields? _uncommon;
 
@@ -84,27 +82,6 @@ internal class UntypedBindingExpression : IObservable<object?>,
     private IValueConverter? Converter => _uncommon?._converter;
     private object? ConverterParameter => _uncommon?._converterParameter;
     private string? StringFormat => _uncommon?._stringFormat;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UntypedBindingExpression"/> class.
-    /// </summary>
-    /// <param name="source">An observable which produces the source from which the value will be read.</param>
-    /// <param name="nodes">The nodes representing the binding path.</param>
-    /// <param name="targetTypeConverter">
-    /// A final type converter to be run on the produced value.
-    /// </param>
-    public UntypedBindingExpression(
-        IObservable<object?> source,
-        IReadOnlyList<ExpressionNode> nodes,
-        TargetTypeConverter? targetTypeConverter = null)
-    {
-        _sourceObservable = source;
-        _nodes = nodes;
-        _targetTypeConverter = targetTypeConverter;
-
-        for (var i = 0; i < nodes.Count; ++i)
-            nodes[i].SetOwner(this, i);
-    }
 
     /// <summary>
     /// Writes the specified value to the binding source if possible.
@@ -193,13 +170,6 @@ internal class UntypedBindingExpression : IObservable<object?>,
         if (_observer is null)
             return;
 
-        if (_sourceSubscription is not null)
-            throw new InvalidOperationException(
-                $"The {nameof(UntypedBindingExpression)} has already been started.");
-
-        if (_sourceObservable is not null)
-            _sourceSubscription = _sourceObservable.Subscribe(OnSourceChanged);
-        
         if (_source?.TryGetTarget(out var source) == true)
         {
             if (_nodes.Count > 0)
@@ -215,9 +185,6 @@ internal class UntypedBindingExpression : IObservable<object?>,
 
     private void Stop()
     {
-        _sourceSubscription?.Dispose();
-        _sourceSubscription = null;
-
         foreach (var node in _nodes)
             node.Reset();
     }
