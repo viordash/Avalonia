@@ -14,6 +14,7 @@ namespace Avalonia.Data.Core.Parsers;
 internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
 {
     private static readonly PropertyInfo AvaloniaObjectIndexer;
+    private static readonly MethodInfo CreateDelegateMethod;
     private static readonly string IndexerGetterName = "get_Item";
     private const string MultiDimensionalArrayGetterMethodName = "Get";
     private readonly LambdaExpression _rootExpression;
@@ -28,6 +29,7 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
     static UntypedBindingExpressionVisitor()
     {
         AvaloniaObjectIndexer = typeof(AvaloniaObject).GetProperty("Item", new[] { typeof(AvaloniaProperty) })!;
+        CreateDelegateMethod = typeof(MethodInfo).GetMethod("CreateDelegate", new[] { typeof(Type), typeof(object) })!;
     }
 
     public static ExpressionNode[] BuildNodes<TOut>(Expression<Func<TIn, TOut>> expression)
@@ -90,6 +92,10 @@ internal class UntypedBindingExpressionVisitor<TIn> : ExpressionVisitor
         {
             Add(node.Arguments[0], node, new PluginStreamNode());
             return node;
+        }
+        else if (method == CreateDelegateMethod)
+        {
+            return Add(node.Arguments[1], node, new PluginPropertyAccessorNode(GetValue<MethodInfo>(node.Object!).Name));
         }
 
         throw new ExpressionParseException(0, $"Invalid method call in binding expression: '{node.Method.DeclaringType}.{node.Method.Name}'.");
