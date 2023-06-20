@@ -25,6 +25,8 @@ internal class TargetTypeConverter : TypeConverter
             return value;
         if (value is IConvertible convertible)
             return convertible.ToType(TargetType, culture);
+        if (TargetType == typeof(string))
+            return value.ToString();
         return new BindingNotification(
             new InvalidCastException($"Cannot convert '{value}' to '{TargetType.Name}'."),
             BindingErrorType.Error);
