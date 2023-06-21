@@ -7,7 +7,7 @@ using Avalonia.Utilities;
 namespace Avalonia.Data.Core.ExpressionNodes.Reflection;
 
 [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
-internal class PluginPropertyAccessorNode : ExpressionNode
+internal class PluginPropertyAccessorNode : ExpressionNode, IPropertyAccessorNode
 {
     private readonly Action<object?> _onValueChanged;
     private IPropertyAccessor? _accessor;
@@ -19,6 +19,7 @@ internal class PluginPropertyAccessorNode : ExpressionNode
     }
 
     public string PropertyName { get; }
+    public IPropertyAccessor? Accessor => _accessor;
 
     public override bool WriteValueToSource(object? value)
     {

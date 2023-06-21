@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Reflection;
 using Avalonia.Data.Converters;
 using Avalonia.Data.Core.ExpressionNodes;
 using Avalonia.Data.Core.Parsers;
-using Avalonia.Reactive;
+using Avalonia.Data.Core.Plugins;
 
 namespace Avalonia.Data.Core;
 
@@ -42,6 +43,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="targetTypeConverter">
     /// A final type converter to be run on the produced value.
     /// </param>
+    /// <param name="dataValidator">The data validation factory to use.</param>
     public UntypedBindingExpression(
         object? source,
         IReadOnlyList<ExpressionNode> nodes,
@@ -49,7 +51,8 @@ internal class UntypedBindingExpression : IObservable<object?>,
         IValueConverter? converter = null,
         object? converterParameter = null,
         string? stringFormat = null,
-        TargetTypeConverter? targetTypeConverter = null)
+        TargetTypeConverter? targetTypeConverter = null,
+        IDataValidationFactory? dataValidator = null)
     {
         _source = new(source);
         _nodes = nodes;
@@ -74,6 +77,12 @@ internal class UntypedBindingExpression : IObservable<object?>,
             };
         }
 
+        if (dataValidator is not null)
+        {
+            _uncommon ??= new();
+            _uncommon._dataValidator = dataValidator;
+        }
+
         for (var i = 0; i < nodes.Count; ++i)
             nodes[i].SetOwner(this, i);
     }
@@ -81,6 +90,8 @@ internal class UntypedBindingExpression : IObservable<object?>,
     private Type TargetType => _targetTypeConverter?.TargetType ?? typeof(object);
     private IValueConverter? Converter => _uncommon?._converter;
     private object? ConverterParameter => _uncommon?._converterParameter;
+    private object? FallbackValue => _uncommon is not null ? _uncommon._fallbackValue : AvaloniaProperty.UnsetValue;
+    private ExpressionNode LeafNode => _nodes[_nodes.Count - 1];
     private string? StringFormat => _uncommon?._stringFormat;
 
     /// <summary>
@@ -94,7 +105,23 @@ internal class UntypedBindingExpression : IObservable<object?>,
     {
         if (_nodes.Count == 0)
             return false;
-        return _nodes[_nodes.Count - 1].WriteValueToSource(value);
+
+        try
+        {
+            return LeafNode.WriteValueToSource(value);
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            if (_uncommon?._dataValidator is not null)
+                PublishDataValidationError(ex.InnerException);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            if (_uncommon?._dataValidator is not null)
+                PublishDataValidationError(ex);
+            return false;
+        }
     }
 
     /// <summary>
@@ -106,12 +133,14 @@ internal class UntypedBindingExpression : IObservable<object?>,
     /// <param name="expression">The expression representing the binding path.</param>
     /// <param name="fallbackValue">The fallback value.</param>
     /// <param name="targetType">The target type to convert to.</param>
+    /// <param name="dataValidator">The data validation factory to use.</param>
     [RequiresUnreferencedCode(TrimmingMessages.ExpressionNodeRequiresUnreferencedCodeMessage)]
     public static UntypedBindingExpression Create<TIn, TOut>(
         TIn source,
         Expression<Func<TIn, TOut>> expression,
         Optional<object?> fallbackValue = default,
-        Type? targetType = null)
+        Type? targetType = null,
+        IDataValidationFactory? dataValidator = null)
             where TIn : class?
     {
         var nodes = UntypedBindingExpressionVisitor<TIn>.BuildNodes(expression);
@@ -122,7 +151,8 @@ internal class UntypedBindingExpression : IObservable<object?>,
             source,
             nodes,
             fallback,
-            targetTypeConverter: targetTypeConverter);
+            targetTypeConverter: targetTypeConverter,
+            dataValidator: dataValidator);
     }
 
     /// <summary>
@@ -195,6 +225,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
             return;
 
         var value = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].Value : null;
+        var isFallback = false;
 
         if (Converter is { } converter)
         {
@@ -221,9 +252,45 @@ internal class UntypedBindingExpression : IObservable<object?>,
             value == AvaloniaProperty.UnsetValue)
         {
             value = _uncommon._fallbackValue;
+            isFallback = true;
         }
 
-        _observer.OnNext(value);
+        PublishValue(value, isFallback);
+    }
+
+    private void PublishValue(object? value, bool isFallback)
+    {
+        Debug.Assert(value is not BindingNotification);
+
+        if (_uncommon is not null)
+        {
+            _uncommon._dataValidationAccessor?.Dispose();
+            _uncommon._dataValidationAccessor = null;
+
+            if (_uncommon._dataValidator is not null &&
+                !isFallback &&
+                value is not null &&
+                value != AvaloniaProperty.UnsetValue &&
+                LeafNode is IPropertyAccessorNode leaf &&
+                leaf.Accessor is not null)
+            {
+                _uncommon._dataValidationAccessor = _uncommon._dataValidator.TryCreate(
+                    value,
+                    leaf.PropertyName,
+                    leaf.Accessor);
+                _uncommon._dataValidationAccessor?.Subscribe(x => { });
+            }
+        }
+
+        _observer?.OnNext(value);
+    }
+
+    private void PublishDataValidationError(Exception error)
+    {
+        _observer?.OnNext(new BindingNotification(
+            error,
+            BindingErrorType.DataValidationError,
+            FallbackValue));
     }
 
     private void OnSourceChanged(object? source)
@@ -238,5 +305,7 @@ internal class UntypedBindingExpression : IObservable<object?>,
         public IValueConverter? _converter;
         public object? _converterParameter;
         public string? _stringFormat;
+        public IDataValidationFactory? _dataValidator;
+        public IPropertyAccessor? _dataValidationAccessor;
     }
 }

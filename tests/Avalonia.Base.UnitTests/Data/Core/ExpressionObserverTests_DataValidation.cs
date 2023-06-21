@@ -2,228 +2,241 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive.Linq;
 using Avalonia.Data;
 using Avalonia.Data.Core;
-using Avalonia.Markup.Parsers;
+using Avalonia.Data.Core.Plugins;
 using Avalonia.Threading;
 using Avalonia.UnitTests;
 using Xunit;
+
+#nullable enable
 
 namespace Avalonia.Base.UnitTests.Data.Core
 {
     public class ExpressionObserverTests_DataValidation : IClassFixture<InvariantCultureFixture>
     {
-        ////[Fact]
-        ////public void Doesnt_Send_DataValidationError_When_DataValidatation_Not_Enabled()
-        ////{
-        ////    var data = new ExceptionTest { MustBePositive = 5 };
-        ////    var observer = UntypedBindingExpression.Create(data, o => o.MustBePositive, false);
-        ////    var validationMessageFound = false;
+        [Fact]
+        public void Doesnt_Send_DataValidationError_When_DataValidatation_Not_Enabled()
+        {
+            var data = new ExceptionTest { MustBePositive = 5 };
+            var target = CreateTarget(data, o => o.MustBePositive, false);
+            var validationMessageFound = false;
 
-        ////    observer.OfType<BindingNotification>()
-        ////        .Where(x => x.ErrorType == BindingErrorType.DataValidationError)
-        ////        .Subscribe(_ => validationMessageFound = true);
-        ////    observer.SetValue(-5);
+            target!.OfType<BindingNotification>()
+                .Where(x => x.ErrorType == BindingErrorType.DataValidationError)
+                .Subscribe(_ => validationMessageFound = true);
+            target.SetValue(-5);
 
-        ////    Assert.False(validationMessageFound);
+            Assert.False(validationMessageFound);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
-        ////[Fact]
-        ////public void Exception_Validation_Sends_DataValidationError()
-        ////{
-        ////    var data = new ExceptionTest { MustBePositive = 5 };
-        ////    var observer = UntypedBindingExpression.Create(data, o => o.MustBePositive, true);
-        ////    var validationMessageFound = false;
+        [Fact]
+        public void Exception_Validation_Sends_DataValidationError()
+        {
+            var data = new ExceptionTest { MustBePositive = 5 };
+            var target = CreateTarget(data, o => o.MustBePositive);
+            var validationMessageFound = false;
 
-        ////    observer.OfType<BindingNotification>()
-        ////        .Where(x => x.ErrorType == BindingErrorType.DataValidationError)
-        ////        .Subscribe(_ => validationMessageFound = true);
-        ////    observer.SetValue(-5);
+            target!.OfType<BindingNotification>()
+                .Where(x => x.ErrorType == BindingErrorType.DataValidationError)
+                .Subscribe(_ => validationMessageFound = true);
+            target.SetValue(-5);
 
-        ////    Assert.True(validationMessageFound);
+            Assert.True(validationMessageFound);
 
-        ////    GC.KeepAlive(data);
-        ////}
+            GC.KeepAlive(data);
+        }
 
-        ////[Fact]
-        ////public void Indei_Validation_Does_Not_Subscribe_When_DataValidation_Not_Enabled()
-        ////{
-        ////    var data = new IndeiTest { MustBePositive = 5 };
-        ////    var observer = UntypedBindingExpression.Create(data, o => o.MustBePositive, false);
+        [Fact]
+        public void Indei_Validation_Does_Not_Subscribe_When_DataValidation_Not_Enabled()
+        {
+            var data = new IndeiTest { MustBePositive = 5 };
+            var observer = CreateTarget(data, o => o.MustBePositive, false);
 
-        ////    observer.Subscribe(_ => { });
+            observer.Subscribe(_ => { });
 
-        ////    Assert.Equal(0, data.ErrorsChangedSubscriptionCount);
-        ////}
+            Assert.Equal(0, data.ErrorsChangedSubscriptionCount);
+        }
 
-        ////[Fact]
-        ////public void Enabled_Indei_Validation_Subscribes()
-        ////{
-        ////    var data = new IndeiTest { MustBePositive = 5 };
-        ////    var observer = UntypedBindingExpression.Create(data, o => o.MustBePositive, true);
-        ////    var sub = observer.Subscribe(_ => { });
+        [Fact]
+        public void Enabled_Indei_Validation_Subscribes()
+        {
+            var data = new IndeiTest { MustBePositive = 5 };
+            var observer = CreateTarget(data, o => o.MustBePositive);
+            var sub = observer.Subscribe(_ => { });
 
-        ////    Assert.Equal(1, data.ErrorsChangedSubscriptionCount);
-        ////    sub.Dispose();
-        ////    // Forces WeakEvent compact
-        ////    Dispatcher.UIThread.RunJobs();
-        ////    Assert.Equal(0, data.ErrorsChangedSubscriptionCount);
-        ////}
+            Assert.Equal(1, data.ErrorsChangedSubscriptionCount);
+            sub.Dispose();
+            // Forces WeakEvent compact
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(0, data.ErrorsChangedSubscriptionCount);
+        }
 
-        ////[Fact]
-        ////public void Validation_Plugins_Send_Correct_Notifications()
-        ////{
-        ////    var data = new IndeiTest();
-        ////    var observer = UntypedBindingExpression.Create(data, o => o.MustBePositive, true);
-        ////    var result = new List<object>();
-            
-        ////    var errmsg = string.Empty;
-        ////    try { typeof(IndeiTest).GetProperty(nameof(IndeiTest.MustBePositive)).SetValue(data, "foo"); }
-        ////    catch(Exception e) { errmsg = e.Message; }
+        [Fact]
+        public void Validation_Plugins_Send_Correct_Notifications()
+        {
+            var data = new IndeiTest();
+            var observer = CreateTarget(data, o => o.MustBePositive);
+            var result = new List<object?>();
 
-        ////    observer.Subscribe(x => result.Add(x));
-        ////    observer.SetValue(5);
-        ////    observer.SetValue(-5);
-        ////    observer.SetValue("foo");
-        ////    observer.SetValue(5);
+            var errmsg = string.Empty;
+            try { typeof(IndeiTest).GetProperty(nameof(IndeiTest.MustBePositive))!.SetValue(data, "foo"); }
+            catch (Exception e) { errmsg = e.Message; }
 
-        ////    Assert.Equal(new[]
-        ////    {
-        ////        new BindingNotification(0),
+            observer.Subscribe(result.Add);
+            observer.SetValue(5);
+            observer.SetValue(-5);
+            observer.SetValue("foo");
+            observer.SetValue(5);
 
-        ////        // Value is notified twice as ErrorsChanged is always called by IndeiTest.
-        ////        new BindingNotification(5),
-        ////        new BindingNotification(5),
+            Assert.Equal(new[]
+            {
+                new BindingNotification(0),
 
-        ////        // Value is first signalled without an error as validation hasn't been updated.
-        ////        new BindingNotification(-5),
-        ////        new BindingNotification(new DataValidationException("Must be positive"), BindingErrorType.DataValidationError, -5),
+                // Value is notified twice as ErrorsChanged is always called by IndeiTest.
+                new BindingNotification(5),
+                new BindingNotification(5),
 
-        ////        // Exception is thrown by trying to set value to "foo".
-        ////        new BindingNotification(
-        ////            new ArgumentException(errmsg),
-        ////            BindingErrorType.DataValidationError),
+                // Value is first signalled without an error as validation hasn't been updated.
+                new BindingNotification(-5),
+                new BindingNotification(new DataValidationException("Must be positive"), BindingErrorType.DataValidationError, -5),
 
-        ////        // Value is set then validation is updated.
-        ////        new BindingNotification(new DataValidationException("Must be positive"), BindingErrorType.DataValidationError, 5),
-        ////        new BindingNotification(5),
-        ////    }, result);
+                // Exception is thrown by trying to set value to "foo".
+                new BindingNotification(
+                    new ArgumentException(errmsg),
+                    BindingErrorType.DataValidationError),
 
-        ////    GC.KeepAlive(data);
-        ////}
+                // Value is set then validation is updated.
+                new BindingNotification(new DataValidationException("Must be positive"), BindingErrorType.DataValidationError, 5),
+                new BindingNotification(5),
+            }, result);
 
-        ////[Fact]
-        ////public void Doesnt_Subscribe_To_Indei_Of_Intermediate_Object_In_Chain()
-        ////{
-        ////    var data = new Container
-        ////    {
-        ////        Inner = new IndeiTest()
-        ////    };
+            GC.KeepAlive(data);
+        }
 
-        ////    var observer = UntypedBindingExpression.Create(data, o => o.Inner.MustBePositive, true);
+        [Fact]
+        public void Doesnt_Subscribe_To_Indei_Of_Intermediate_Object_In_Chain()
+        {
+            var data = new Container
+            {
+                Inner = new IndeiTest()
+            };
 
-        ////    observer.Subscribe(_ => { });
+            var observer = CreateTarget(data, o => o.Inner!.MustBePositive);
 
-        ////    // We may want to change this but I've never seen an example of data validation on an
-        ////    // intermediate object in a chain so for the moment I'm not sure what the result of 
-        ////    // validating such a thing should look like.
-        ////    Assert.Equal(0, data.ErrorsChangedSubscriptionCount);
-        ////    Assert.Equal(1, data.Inner.ErrorsChangedSubscriptionCount);
-        ////}
+            observer.Subscribe(_ => { });
 
-        ////[Fact]
-        ////public void Sends_Correct_Notifications_With_Property_Chain()
-        ////{
-        ////    var container = new Container();
+            // We may want to change this but I've never seen an example of data validation on an
+            // intermediate object in a chain so for the moment I'm not sure what the result of 
+            // validating such a thing should look like.
+            Assert.Equal(0, data.ErrorsChangedSubscriptionCount);
+            Assert.Equal(1, data.Inner.ErrorsChangedSubscriptionCount);
+        }
 
-        ////    var observer = UntypedBindingExpression.Create(container, o => o.Inner.MustBePositive, true);
+        [Fact]
+        public void Sends_Correct_Notifications_With_Property_Chain()
+        {
+            var container = new Container();
 
-        ////    var result = new List<object>();
+            var observer = CreateTarget(container, o => o.Inner!.MustBePositive);
 
-        ////    observer.Subscribe(x => result.Add(x));
+            var result = new List<object?>();
 
-        ////    Assert.Equal(new[]
-        ////    {
-        ////        new BindingNotification(
-        ////            new MarkupBindingChainException("Null value", "o => o.Inner.MustBePositive", "Inner"),
-        ////            BindingErrorType.Error,
-        ////            AvaloniaProperty.UnsetValue),
-        ////    }, result);
+            observer.Subscribe(result.Add);
 
-        ////    GC.KeepAlive(container);
-        ////}
+            Assert.Equal(new[]
+            {
+                new BindingNotification(
+                    new MarkupBindingChainException("Null value", "o => o.Inner.MustBePositive", "Inner"),
+                    BindingErrorType.Error,
+                    AvaloniaProperty.UnsetValue),
+            }, result);
 
-        ////public class ExceptionTest : NotifyingBase
-        ////{
-        ////    private int _mustBePositive;
+            GC.KeepAlive(container);
+        }
 
-        ////    public int MustBePositive
-        ////    {
-        ////        get { return _mustBePositive; }
-        ////        set
-        ////        {
-        ////            if (value <= 0)
-        ////            {
-        ////                throw new ArgumentOutOfRangeException(nameof(value));
-        ////            }
+        private UntypedBindingExpression CreateTarget<TIn, TOut>(
+            TIn data,
+            Expression<Func<TIn, TOut>> value,
+            bool enableDataValidation = true)
+                where TIn : class?
+        {
+            var validator = enableDataValidation ? new DataValidationPluginSelector() : null;
+            return UntypedBindingExpression.Create(data, value, dataValidator: validator);
+        }
 
-        ////            _mustBePositive = value;
-        ////            RaisePropertyChanged();
-        ////        }
-        ////    }
-        ////}
+        public class ExceptionTest : NotifyingBase
+        {
+            private int _mustBePositive;
 
-        ////private class IndeiTest : IndeiBase
-        ////{
-        ////    private int _mustBePositive;
-        ////    private Dictionary<string, IList<string>> _errors = new Dictionary<string, IList<string>>();
+            public int MustBePositive
+            {
+                get { return _mustBePositive; }
+                set
+                {
+                    if (value <= 0)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value));
+                    }
 
-        ////    public int MustBePositive
-        ////    {
-        ////        get { return _mustBePositive; }
-        ////        set
-        ////        {
-        ////            _mustBePositive = value;
-        ////            RaisePropertyChanged();
+                    _mustBePositive = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
-        ////            if (value >= 0)
-        ////            {
-        ////                _errors.Remove(nameof(MustBePositive));
-        ////                RaiseErrorsChanged(nameof(MustBePositive));
-        ////            }
-        ////            else
-        ////            {
-        ////                _errors[nameof(MustBePositive)] = new[] { "Must be positive" };
-        ////                RaiseErrorsChanged(nameof(MustBePositive));
-        ////            }
-        ////        }
-        ////    }
+        private class IndeiTest : IndeiBase
+        {
+            private int _mustBePositive;
+            private Dictionary<string, IList<string>> _errors = new Dictionary<string, IList<string>>();
 
-        ////    public override bool HasErrors => _mustBePositive >= 0;
+            public int MustBePositive
+            {
+                get { return _mustBePositive; }
+                set
+                {
+                    _mustBePositive = value;
+                    RaisePropertyChanged();
 
-        ////    public override IEnumerable GetErrors(string propertyName)
-        ////    {
-        ////        IList<string> result;
-        ////        _errors.TryGetValue(propertyName, out result);
-        ////        return result;
-        ////    }
-        ////}
+                    if (value >= 0)
+                    {
+                        _errors.Remove(nameof(MustBePositive));
+                        RaiseErrorsChanged(nameof(MustBePositive));
+                    }
+                    else
+                    {
+                        _errors[nameof(MustBePositive)] = new[] { "Must be positive" };
+                        RaiseErrorsChanged(nameof(MustBePositive));
+                    }
+                }
+            }
 
-        ////private class Container : IndeiBase
-        ////{
-        ////    private IndeiTest _inner;
+            public override bool HasErrors => _mustBePositive >= 0;
 
-        ////    public IndeiTest Inner
-        ////    {
-        ////        get { return _inner; }
-        ////        set { _inner = value; RaisePropertyChanged(); }
-        ////    }
+            public override IEnumerable? GetErrors(string propertyName)
+            {
+                IList<string>? result;
+                _errors.TryGetValue(propertyName, out result);
+                return result;
+            }
+        }
 
-        ////    public override bool HasErrors => false;
-        ////    public override IEnumerable GetErrors(string propertyName) => null;
-        ////}
+        private class Container : IndeiBase
+        {
+            private IndeiTest? _inner;
+
+            public IndeiTest? Inner
+            {
+                get { return _inner; }
+                set { _inner = value; RaisePropertyChanged(); }
+            }
+
+            public override bool HasErrors => false;
+            public override IEnumerable? GetErrors(string propertyName) => null;
+        }
     }
 }
