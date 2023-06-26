@@ -119,6 +119,7 @@
 @end
 
 static IAvnGlSurfaceRenderTarget* CreateGlRenderTarget(IOSurfaceRenderTarget* target);
+static IAvnSoftwareRenderTarget* CreateSoftwareRenderTarget(IOSurfaceRenderTarget* target);
 
 @implementation IOSurfaceRenderTarget
 {
@@ -134,13 +135,10 @@ static IAvnGlSurfaceRenderTarget* CreateGlRenderTarget(IOSurfaceRenderTarget* ta
     _glContext = context;
     lock = [NSObject new];
     surface  = nil;
+    _layer = [CALayer new];
     [self resize:{1,1} withScale: 1];
     
     return self;
-}
-
-- (AvnPixelSize) pixelSize {
-    return {1, 1};
 }
 
 - (CALayer *)layer {
@@ -195,11 +193,6 @@ static IAvnGlSurfaceRenderTarget* CreateGlRenderTarget(IOSurfaceRenderTarget* ta
         });
 }
 
-- (void) setNewLayer:(CALayer *)layer {
-    _layer = layer;
-    [self updateLayer];
-}
-
 - (HRESULT)setSwFrame:(AvnFramebuffer *)fb {
     @synchronized (lock) {
         if(fb->PixelFormat == AvnPixelFormat::kAvnRgb565)
@@ -230,6 +223,11 @@ static IAvnGlSurfaceRenderTarget* CreateGlRenderTarget(IOSurfaceRenderTarget* ta
 -(IAvnGlSurfaceRenderTarget*) createSurfaceRenderTarget
 {
     return CreateGlRenderTarget(self);
+}
+
+-(IAvnSoftwareRenderTarget*) createSoftwareRenderTarget
+{
+    return CreateSoftwareRenderTarget(self);
 }
 
 @end
@@ -310,4 +308,26 @@ public:
 static IAvnGlSurfaceRenderTarget* CreateGlRenderTarget(IOSurfaceRenderTarget* target)
 {
     return new AvnGlRenderTarget(target);
-}
+};
+
+
+class AvnSoftwareRenderTarget : public ComSingleObject<IAvnSoftwareRenderTarget, &IID_IAvnSoftwareRenderTarget>
+{
+    IOSurfaceRenderTarget* _target;
+public:
+    FORWARD_IUNKNOWN()
+
+    AvnSoftwareRenderTarget(IOSurfaceRenderTarget *target) {
+        _target = target;
+    }
+
+    HRESULT SetFrame(AvnFramebuffer *fb) override {
+        [_target setSwFrame: fb];
+        return 0;
+    }
+};
+
+static IAvnSoftwareRenderTarget* CreateSoftwareRenderTarget(IOSurfaceRenderTarget* target)
+{
+    return new AvnSoftwareRenderTarget(target);
+};

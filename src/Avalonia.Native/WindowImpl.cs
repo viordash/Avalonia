@@ -32,7 +32,7 @@ namespace Avalonia.Native
             
             using (var e = new WindowEvents(this))
             {
-                Init(_native = factory.CreateWindow(e, glFeature.SharedContext.Context), factory.CreateScreens());
+                Init(_native = factory.CreateWindow(e), factory.CreateScreens());
             }
 
             _nativeMenuExporter = new AvaloniaNativeMenuExporter(_native, factory);

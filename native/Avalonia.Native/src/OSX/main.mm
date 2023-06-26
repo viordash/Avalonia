@@ -213,7 +213,7 @@ public:
         return (IAvnMacOptions*)new MacOptions();
     }
     
-    virtual HRESULT CreateWindow(IAvnWindowEvents* cb, IAvnGlContext* gl, IAvnWindow** ppv)  override
+    virtual HRESULT CreateWindow(IAvnWindowEvents* cb, IAvnWindow** ppv)  override
     {
         START_COM_CALL;
         
@@ -221,12 +221,12 @@ public:
         {
             if(cb == nullptr || ppv == nullptr)
                 return E_POINTER;
-            *ppv = CreateAvnWindow(cb, gl);
+            *ppv = CreateAvnWindow(cb);
             return S_OK;
         }
     };
     
-    virtual HRESULT CreatePopup(IAvnWindowEvents* cb, IAvnGlContext* gl, IAvnPopup** ppv) override
+    virtual HRESULT CreatePopup(IAvnWindowEvents* cb, IAvnPopup** ppv) override
     {
         START_COM_CALL;
         
@@ -235,7 +235,7 @@ public:
             if(cb == nullptr || ppv == nullptr)
                 return E_POINTER;
             
-            *ppv = CreateAvnPopup(cb, gl);
+            *ppv = CreateAvnPopup(cb);
             return S_OK;
         }
     }

@@ -9,8 +9,8 @@
 
 extern IAvnPlatformThreadingInterface* CreatePlatformThreading();
 extern void FreeAvnGCHandle(void* handle);
-extern IAvnWindow* CreateAvnWindow(IAvnWindowEvents*events, IAvnGlContext* gl);
-extern IAvnPopup* CreateAvnPopup(IAvnWindowEvents*events, IAvnGlContext* gl);
+extern IAvnWindow* CreateAvnWindow(IAvnWindowEvents*events);
+extern IAvnPopup* CreateAvnPopup(IAvnWindowEvents*events);
 extern IAvnSystemDialogs* CreateSystemDialogs();
 extern IAvnScreens* CreateScreens();
 extern IAvnClipboard* CreateClipboard(NSPasteboard*, NSPasteboardItem*);
@@ -79,5 +79,5 @@ public:
     virtual HRESULT ShowAll() override;
     virtual HRESULT HideOthers() override;
 };
-
+#define NSApp [NSApplication sharedApplication]
 #endif

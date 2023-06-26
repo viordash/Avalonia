@@ -22,7 +22,7 @@ namespace Avalonia.Native
             _parent = parent;
             using (var e = new PopupEvents(this))
             {
-                Init(factory.CreatePopup(e, _glFeature.SharedContext.Context), factory.CreateScreens());
+                Init(factory.CreatePopup(e), factory.CreateScreens());
             }
             PopupPositioner = new ManagedPopupPositioner(new ManagedPopupPositionerPopupImplHelper(parent, MoveResize));
         }

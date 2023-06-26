@@ -195,7 +195,7 @@ namespace Avalonia.Native
         public IGlPlatformSurfaceRenderTarget CreateGlRenderTarget(IGlContext context)
         {
             var avnContext = (GlContext)context;
-            return new GlPlatformSurfaceRenderTarget(_window.CreateGlRenderTarget(), avnContext);
+            return new GlPlatformSurfaceRenderTarget(_window.CreateGlRenderTarget(avnContext.Context), avnContext);
         }
 
     }

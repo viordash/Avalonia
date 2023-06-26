@@ -487,8 +487,8 @@ interface IAvaloniaNativeFactory : IUnknown
 {
      HRESULT Initialize(IAvnGCHandleDeallocatorCallback* deallocator, IAvnApplicationEvents* appCb);
      IAvnMacOptions* GetMacOptions();
-     HRESULT CreateWindow(IAvnWindowEvents* cb, IAvnGlContext* gl, IAvnWindow** ppv);
-     HRESULT CreatePopup(IAvnWindowEvents* cb, IAvnGlContext* gl, IAvnPopup** ppv);
+     HRESULT CreateWindow(IAvnWindowEvents* cb, IAvnWindow** ppv);
+     HRESULT CreatePopup(IAvnWindowEvents* cb, IAvnPopup** ppv);
      HRESULT CreatePlatformThreadingInterface(IAvnPlatformThreadingInterface** ppv);
      HRESULT CreateSystemDialogs(IAvnSystemDialogs** ppv);
      HRESULT CreateScreens(IAvnScreens** ppv);
@@ -533,10 +533,10 @@ interface IAvnWindowBase : IUnknown
      HRESULT SetPosition(AvnPoint point);
      HRESULT PointToClient(AvnPoint point, AvnPoint*ret);
      HRESULT PointToScreen(AvnPoint point, AvnPoint*ret);
-     HRESULT ThreadSafeSetSwRenderedFrame(AvnFramebuffer* fb, IUnknown* dispose);
      HRESULT SetTopMost(bool value);
      HRESULT SetCursor(IAvnCursor* cursor);
-     HRESULT CreateGlRenderTarget(IAvnGlSurfaceRenderTarget** ret);
+     HRESULT CreateGlRenderTarget(IAvnGlContext* context, IAvnGlSurfaceRenderTarget** ret);
+     HRESULT CreateSoftwareRenderTarget(IAvnSoftwareRenderTarget** ret);
      HRESULT SetMainMenu(IAvnMenu* menu);
      HRESULT ObtainNSWindowHandle([intptr]void** retOut);
      HRESULT ObtainNSWindowHandleRetained([intptr]void** retOut);
@@ -733,6 +733,13 @@ interface IAvnCursorFactory : IUnknown
      HRESULT GetCursor(AvnStandardCursorType cursorType, IAvnCursor** retOut);
      HRESULT CreateCustomCursor (void* bitmapData, size_t length, AvnPixelSize hotPixel, IAvnCursor** retOut);
 }
+
+[uuid(931062d2-5bc8-4062-8588-83dd8deb99c2)]
+interface IAvnSoftwareRenderTarget : IUnknown
+{
+     HRESULT SetFrame(AvnFramebuffer* fb);
+}
+
 
 [uuid(60452465-8616-40af-bc00-042e69828ce7)]
 interface IAvnGlDisplay : IUnknown

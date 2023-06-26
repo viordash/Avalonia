@@ -5,13 +5,15 @@
 #include "avalonia-native.h"
 
 @protocol IRenderTarget
--(void) setNewLayer: (CALayer*) layer;
--(HRESULT) setSwFrame: (AvnFramebuffer*) fb;
+
 -(void) resize: (AvnPixelSize) size withScale: (float) scale;
--(AvnPixelSize) pixelSize;
--(IAvnGlSurfaceRenderTarget*) createSurfaceRenderTarget;
+-(CALayer*) layer;
+
 @end
 
 @interface IOSurfaceRenderTarget : NSObject<IRenderTarget>
 -(IOSurfaceRenderTarget*) initWithOpenGlContext: (IAvnGlContext*) context;
+-(IAvnGlSurfaceRenderTarget*) createSurfaceRenderTarget;
+-(IAvnSoftwareRenderTarget*) createSoftwareRenderTarget;
+-(HRESULT) setSwFrame: (AvnFramebuffer*) fb;
 @end

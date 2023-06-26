@@ -140,25 +140,48 @@ namespace Avalonia.Native
 
         public INativeControlHostImpl NativeControlHost => _nativeControlHost;
 
-        public ILockedFramebuffer Lock()
+
+        IFramebufferRenderTarget IFramebufferPlatformSurface.CreateFramebufferRenderTarget() => 
+            new FramebufferRenderTarget(this, _native.CreateSoftwareRenderTarget());
+
+        class FramebufferRenderTarget : IFramebufferRenderTarget
         {
-            var w = _savedLogicalSize.Width * _savedScaling;
-            var h = _savedLogicalSize.Height * _savedScaling;
-            var dpi = _savedScaling * 96;
-            return new DeferredFramebuffer(cb =>
+            private readonly WindowBaseImpl _parent;
+            private IAvnSoftwareRenderTarget? _target;
+
+            public FramebufferRenderTarget(WindowBaseImpl parent, IAvnSoftwareRenderTarget target)
             {
-                lock (_syncRoot)
+                _parent = parent;
+                _target = target;
+            }
+
+            public void Dispose()
+            {
+                lock (_parent._syncRoot)
                 {
-                    if (_native == null)
-                        return false;
-                    cb(_native);
-                    _lastRenderedLogicalSize = _savedLogicalSize;
-                    return true;
+                    _target?.Dispose();
+                    _target = null;
                 }
-            }, (int)w, (int)h, new Vector(dpi, dpi));
+            }
+            
+            public ILockedFramebuffer Lock()
+            {
+                var w = _parent._savedLogicalSize.Width * _parent._savedScaling;
+                var h = _parent._savedLogicalSize.Height * _parent._savedScaling;
+                var dpi = _parent._savedScaling * 96;
+                return new DeferredFramebuffer(_target, cb =>
+                {
+                    lock (_parent._syncRoot)
+                    {
+                        if (_parent._native != null && _target != null)
+                        {
+                            cb(_parent._native);
+                            _parent._lastRenderedLogicalSize = _parent._savedLogicalSize;
+                        }
+                    }
+                }, (int)w, (int)h, new Vector(dpi, dpi));
+            }
         }
-        
-        public IFramebufferRenderTarget CreateFramebufferRenderTarget() => new FuncFramebufferRenderTarget(Lock);
 
         public Action LostFocus { get; set; }
         
