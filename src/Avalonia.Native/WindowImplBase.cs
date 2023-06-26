@@ -157,6 +157,8 @@ namespace Avalonia.Native
                 }
             }, (int)w, (int)h, new Vector(dpi, dpi));
         }
+        
+        public IFramebufferRenderTarget CreateFramebufferRenderTarget() => new FuncFramebufferRenderTarget(Lock);
 
         public Action LostFocus { get; set; }
         
