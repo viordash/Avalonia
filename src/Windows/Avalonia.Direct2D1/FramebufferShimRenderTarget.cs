@@ -20,7 +20,7 @@ namespace Avalonia.Direct2D1
 
         public void Dispose()
         {
-            _target?.Lock();
+            _target?.Dispose();
             _target = null;
         }
 
