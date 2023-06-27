@@ -54,24 +54,20 @@ namespace Avalonia.Native
         protected IInputRoot _inputRoot;
         IAvnWindowBase _native;
         private object _syncRoot = new object();
-        private bool _gpu = false;
         private readonly MouseDevice _mouse;
         private readonly IKeyboardDevice _keyboard;
         private readonly ICursorFactory _cursorFactory;
         private Size _savedLogicalSize;
         private Size _lastRenderedLogicalSize;
         private double _savedScaling;
-        private GlPlatformSurface _glSurface;
         private NativeControlHostImpl _nativeControlHost;
         private IStorageProvider _storageProvider;
         private PlatformBehaviorInhibition _platformBehaviorInhibition;
         private WindowTransparencyLevel _transparencyLevel = WindowTransparencyLevel.None;
 
-        internal WindowBaseImpl(IAvaloniaNativeFactory factory, AvaloniaNativePlatformOptions opts,
-            AvaloniaNativeGlPlatformGraphics glFeature)
+        internal WindowBaseImpl(IAvaloniaNativeFactory factory)
         {
             _factory = factory;
-            _gpu = opts.UseGpu && glFeature != null;
 
             _keyboard = AvaloniaLocator.Current.GetService<IKeyboardDevice>();
             _mouse = new MouseDevice();
@@ -82,9 +78,8 @@ namespace Avalonia.Native
         {
             _native = window;
 
+            Surfaces = new object[] { new GlPlatformSurface(window), new MetalPlatformSurface(window), this };
             Handle = new MacOSTopLevelWindowHandle(window);
-            if (_gpu)
-                _glSurface = new GlPlatformSurface(window);
             Screen = new ScreenImpl(screens);
 
             _savedLogicalSize = ClientSize;
@@ -133,10 +128,7 @@ namespace Avalonia.Native
             }
         }
 
-        public IEnumerable<object> Surfaces => new[] {
-            (_gpu ? _glSurface : (object)null),
-            this 
-        };
+        public IEnumerable<object> Surfaces { get; private set; }
 
         public INativeControlHostImpl NativeControlHost => _nativeControlHost;
 

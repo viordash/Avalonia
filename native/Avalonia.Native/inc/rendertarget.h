@@ -17,3 +17,8 @@
 -(IAvnSoftwareRenderTarget*) createSoftwareRenderTarget;
 -(HRESULT) setSwFrame: (AvnFramebuffer*) fb;
 @end
+
+@interface MetalRenderTarget : NSObject<IRenderTarget>
+-(MetalRenderTarget*) initWithDevice: (IAvnMetalDevice*) device;
+-(void) getRenderTarget: (IAvnMetalRenderTarget**) ppv;
+@end

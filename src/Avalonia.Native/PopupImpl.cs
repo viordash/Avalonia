@@ -8,17 +8,11 @@ namespace Avalonia.Native
 {
     class PopupImpl : WindowBaseImpl, IPopupImpl
     {
-        private readonly AvaloniaNativePlatformOptions _opts;
-        private readonly AvaloniaNativeGlPlatformGraphics _glFeature;
         private readonly IWindowBaseImpl _parent;
 
         public PopupImpl(IAvaloniaNativeFactory factory,
-            AvaloniaNativePlatformOptions opts,
-            AvaloniaNativeGlPlatformGraphics glFeature,
-            IWindowBaseImpl parent) : base(factory, opts, glFeature)
+            IWindowBaseImpl parent) : base(factory)
         {
-            _opts = opts;
-            _glFeature = glFeature;
             _parent = parent;
             using (var e = new PopupEvents(this))
             {
@@ -68,7 +62,7 @@ namespace Avalonia.Native
             base.Show(false, isDialog);
         }
 
-        public override IPopupImpl CreatePopup() => new PopupImpl(_factory, _opts, _glFeature, this);
+        public override IPopupImpl CreatePopup() => new PopupImpl(_factory, this);
 
         public void SetWindowManagerAddShadowHint(bool enabled)
         {

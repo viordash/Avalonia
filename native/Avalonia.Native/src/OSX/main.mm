@@ -320,7 +320,22 @@ public:
             return S_OK;
         }
     }
-    
+
+    virtual HRESULT ObtainMetalDisplay(IAvnMetalDisplay** ppv) override
+    {
+        START_COM_CALL;
+        @autoreleasepool
+        {
+            auto rv = ::GetMetalDisplay();
+            if(rv == NULL)
+                return E_FAIL;
+            rv->AddRef();
+            *ppv = rv;
+            return S_OK;
+        }
+    }
+
+
     virtual HRESULT CreateTrayIcon (IAvnTrayIcon** ppv) override
     {
         START_COM_CALL;

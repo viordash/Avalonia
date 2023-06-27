@@ -495,6 +495,18 @@ HRESULT WindowBaseImpl::CreateGlRenderTarget(IAvnGlContext* glContext, IAvnGlSur
     return S_OK;
 }
 
+HRESULT WindowBaseImpl::CreateMetalRenderTarget(IAvnMetalDevice* device, IAvnMetalRenderTarget **ppv) {
+    START_COM_CALL;
+
+    if (View == NULL)
+        return E_FAIL;
+
+    auto target = [[MetalRenderTarget alloc] initWithDevice: device];
+    [View setRenderTarget: target];
+    [target getRenderTarget: ppv];
+    return S_OK;
+}
+
 HRESULT WindowBaseImpl::CreateNativeControlHost(IAvnNativeControlHost **retOut) {
     START_COM_CALL;
 

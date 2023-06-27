@@ -92,6 +92,13 @@ public:
     {
         return &_obj;
     }
+
+    void setNoAddRef(TInterface* value)
+    {
+        if(_obj != nullptr)
+            _obj->Release();
+        _obj = value;
+    }
     
     operator TInterface*() const
     {

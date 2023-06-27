@@ -21,6 +21,7 @@ extern NSString* GetAvnCustomDataType();
 extern AvnDragDropEffects ConvertDragDropEffects(NSDragOperation nsop);
 extern IAvnCursorFactory* CreateCursorFactory();
 extern IAvnGlDisplay* GetGlDisplay();
+extern IAvnMetalDisplay* GetMetalDisplay();
 extern IAvnMenu* CreateAppMenu(IAvnMenuEvents* events);
 extern IAvnTrayIcon* CreateTrayIcon();
 extern IAvnMenuItem* CreateAppMenuItem();

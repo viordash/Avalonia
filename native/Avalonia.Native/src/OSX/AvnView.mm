@@ -71,6 +71,8 @@
 {
     self = [super init];
     [self setWantsLayer:YES];
+    [self setLayerContentsPlacement: NSViewLayerContentsPlacementTopLeft];
+
     [self setCanDrawSubviewsIntoLayer: NO];
     [self setLayerContentsRedrawPolicy: NSViewLayerContentsRedrawDuringViewResize];
 

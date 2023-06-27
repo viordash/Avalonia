@@ -13,6 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\packages\Avalonia\Avalonia.csproj" />
+    <ProjectReference Include="..\..\Avalonia.Metal\Avalonia.Metal.csproj" />
   </ItemGroup>
   
   <Import Project="..\..\..\build\SkiaSharp.props" />

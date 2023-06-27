@@ -496,6 +496,7 @@ interface IAvaloniaNativeFactory : IUnknown
      HRESULT CreateDndClipboard(IAvnClipboard** ppv);
      HRESULT CreateCursorFactory(IAvnCursorFactory** ppv);
      HRESULT ObtainGlDisplay(IAvnGlDisplay** ppv);
+     HRESULT ObtainMetalDisplay(IAvnMetalDisplay** ppv);
      HRESULT SetAppMenu(IAvnMenu* menu);
      HRESULT SetServicesMenu(IAvnMenu* menu);
      HRESULT CreateMenu(IAvnMenuEvents* cb, IAvnMenu** ppv);
@@ -537,6 +538,7 @@ interface IAvnWindowBase : IUnknown
      HRESULT SetCursor(IAvnCursor* cursor);
      HRESULT CreateGlRenderTarget(IAvnGlContext* context, IAvnGlSurfaceRenderTarget** ret);
      HRESULT CreateSoftwareRenderTarget(IAvnSoftwareRenderTarget** ret);
+     HRESULT CreateMetalRenderTarget(IAvnMetalDevice* device, IAvnMetalRenderTarget** ret);
      HRESULT SetMainMenu(IAvnMenu* menu);
      HRESULT ObtainNSWindowHandle([intptr]void** retOut);
      HRESULT ObtainNSWindowHandleRetained([intptr]void** retOut);
@@ -771,6 +773,33 @@ interface IAvnGlSurfaceRenderingSession : IUnknown
 {
      HRESULT GetPixelSize(AvnPixelSize* ret);
      HRESULT GetScaling(double* ret);
+}
+
+[uuid(da291767-4db3-4598-893d-09ecaa23893f)]
+interface IAvnMetalDisplay : IUnknown
+{
+    HRESULT CreateDevice(IAvnMetalDevice** ret);
+}
+
+[uuid(969fa914-b74a-4c9f-8725-5160dc63579e)]
+interface IAvnMetalDevice : IUnknown
+{
+    [intptr]void* GetDevice();
+    [intptr]void* GetQueue();
+}
+
+[uuid(f1306b71-eca0-426e-8700-105192693b1a)]
+interface IAvnMetalRenderTarget : IUnknown
+{
+    HRESULT BeginDrawing(IAvnMetalRenderingSession** ret);
+}
+    
+[uuid(e625b406-f04c-484e-946a-4abd2c6015ad)]
+interface IAvnMetalRenderingSession : IUnknown
+{
+     HRESULT GetPixelSize(AvnPixelSize* ret);
+     double GetScaling();
+     [intptr]void* GetTexture();
 }
 
 [uuid(60992d19-38f0-4141-a0a9-76ac303801f3)]

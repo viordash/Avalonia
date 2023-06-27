@@ -89,6 +89,8 @@ BEGIN_INTERFACE_MAP()
 
     virtual HRESULT CreateGlRenderTarget(IAvnGlContext* glContext, IAvnGlSurfaceRenderTarget **ppv) override;
 
+    virtual HRESULT CreateMetalRenderTarget(IAvnMetalDevice* device, IAvnMetalRenderTarget **ppv) override;
+
     virtual HRESULT CreateNativeControlHost(IAvnNativeControlHost **retOut) override;
 
     virtual HRESULT SetTransparencyMode(AvnWindowTransparencyMode mode) override;

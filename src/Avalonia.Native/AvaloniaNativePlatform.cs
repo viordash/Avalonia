@@ -9,6 +9,7 @@ using Avalonia.OpenGL;
 using Avalonia.Platform;
 using Avalonia.Rendering;
 using Avalonia.Rendering.Composition;
+using Avalonia.Skia.Metal;
 using Avalonia.Threading;
 using MicroCom.Runtime;
 #nullable enable
@@ -19,7 +20,7 @@ namespace Avalonia.Native
     {
         private readonly IAvaloniaNativeFactory _factory;
         private AvaloniaNativePlatformOptions? _options;
-        private AvaloniaNativeGlPlatformGraphics? _platformGl;
+        private IPlatformGraphics? _platformGraphics;
 
         [DllImport("libAvaloniaNative")]
         static extern IntPtr CreateAvaloniaNative();
@@ -126,20 +127,42 @@ namespace Avalonia.Native
             
             if (_options.UseGpu)
             {
-                try
+                if (_options.UseMetal)
                 {
-                    _platformGl = new AvaloniaNativeGlPlatformGraphics(_factory.ObtainGlDisplay());
-                    AvaloniaLocator.CurrentMutable
-                        .Bind<IPlatformGraphics>().ToConstant(_platformGl);
+                    try
+                    {
+                        var metal = new MetalPlatformGraphics(_factory);
+                        metal.CreateContext().Dispose();
+                        _platformGraphics = metal;
+                    }
+                    catch
+                    {
+                        // Ignored
+                    }
+                }
 
-                }
-                catch (Exception)
+                if (_platformGraphics == null)
                 {
-                    // ignored
+                    try
+                    {
+                        _platformGraphics = new AvaloniaNativeGlPlatformGraphics(_factory.ObtainGlDisplay());
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
                 }
+
+                if(_platformGraphics != null)
+                    AvaloniaLocator.CurrentMutable
+                        .Bind<IPlatformGraphics>().ToConstant(_platformGraphics);
             }
+
+            var metalDevice = _factory.ObtainMetalDisplay().CreateDevice();
+            var api = new SkiaMetalApi();
+            api.CreateContext(metalDevice.Device, metalDevice.Queue, null);
             
-            Compositor = new Compositor(_platformGl, true);
+            Compositor = new Compositor(_platformGraphics, true);
         }
 
         public ITrayIconImpl CreateTrayIcon()
@@ -149,7 +172,7 @@ namespace Avalonia.Native
 
         public IWindowImpl CreateWindow()
         {
-            return new WindowImpl(_factory, _options, _platformGl);
+            return new WindowImpl(_factory, _options);
         }
 
         public IWindowImpl CreateEmbeddableWindow()
