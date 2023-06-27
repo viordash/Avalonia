@@ -9,7 +9,6 @@ using Avalonia.OpenGL;
 using Avalonia.Platform;
 using Avalonia.Rendering;
 using Avalonia.Rendering.Composition;
-using Avalonia.Skia.Metal;
 using Avalonia.Threading;
 using MicroCom.Runtime;
 #nullable enable
@@ -158,10 +157,6 @@ namespace Avalonia.Native
                         .Bind<IPlatformGraphics>().ToConstant(_platformGraphics);
             }
 
-            var metalDevice = _factory.ObtainMetalDisplay().CreateDevice();
-            var api = new SkiaMetalApi();
-            api.CreateContext(metalDevice.Device, metalDevice.Queue, null);
-            
             Compositor = new Compositor(_platformGraphics, true);
         }
 

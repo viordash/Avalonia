@@ -10,7 +10,7 @@ namespace Avalonia.Skia.Metal;
 // We use reflection only on member that are guaranteed to be referenced by OpenGL gpu code, so there should not
 // be problems with trimming
 
-public unsafe class SkiaMetalApi
+internal unsafe class SkiaMetalApi
 {
     //    internal static extern unsafe IntPtr gr_direct_context_make_metal_with_options(
     //void* device,
