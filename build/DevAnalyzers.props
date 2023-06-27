@@ -1,5 +1,5 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup>
+  <ItemGroup><!--
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\src\tools\DevAnalyzers\DevAnalyzers.csproj"
                       PrivateAssets="all"
                       ReferenceOutputAssembly="false"
@@ -9,6 +9,6 @@
                       PrivateAssets="all"
                       ReferenceOutputAssembly="false"
                       OutputItemType="Analyzer"
-                      SetTargetFramework="TargetFramework=netstandard2.0"/>
+                      SetTargetFramework="TargetFramework=netstandard2.0"/>-->
   </ItemGroup>
 </Project>
