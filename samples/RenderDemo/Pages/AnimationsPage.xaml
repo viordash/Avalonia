@@ -349,6 +349,7 @@
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="False">
       <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="20">
         <TextBlock VerticalAlignment="Center">Hover to activate Keyframe Animations.</TextBlock>
+        <Button Click="OnTest0" Content="Test 0"/>
       </StackPanel>
       <WrapPanel ClipToBounds="False">
         <Border Classes="Test Rect1" Background="DarkRed"/>
