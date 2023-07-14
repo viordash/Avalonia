@@ -3,12 +3,15 @@ using System.Diagnostics;
 using Moq;
 using Avalonia.Platform;
 using Avalonia.Rendering;
+using Avalonia.Threading;
 
 namespace Avalonia.X11.NUnit.UnitTests
 {
     public class X11ClipboardTests
     {
 
+        static Thread UiThread;
+        
         Mock<IPlatformRenderInterface> mockIPlatformRenderInterface = new();
         Mock<IRenderLoop> mockIRenderLoop = new();
         // IPlatformRenderInterface factory = AvaloniaLocator.Current.GetRequiredService<IPlatformRenderInterface>();
@@ -17,8 +20,12 @@ namespace Avalonia.X11.NUnit.UnitTests
         public void Setup()
         {
             Debug.WriteLine("---------------------------- Setup 0");
-            AvaloniaLocator.CurrentMutable.Bind<IRenderLoop>()
-                .ToConstant(mockIRenderLoop.Object);
+            // AvaloniaLocator.CurrentMutable.Bind<IRenderLoop>()
+            //     .ToConstant(mockIRenderLoop.Object);
+
+            UiThread = Thread.CurrentThread;
+            AppBuilder.Configure<App>().RuntimePlatformServicesInitializer();
+            var app = new App();
 
             var options = new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Software } };
             AvaloniaX11PlatformExtensions.InitializeX11Platform(options);
