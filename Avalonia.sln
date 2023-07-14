@@ -276,7 +276,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MobileSandbox.Browser", "sa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avalonia.Metal", "src\Avalonia.Metal\Avalonia.Metal.csproj", "{60B4ED1F-ECFA-453B-8A70-1788261C8355}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Linux.NUnit.UnitTests", "Avalonia.Linux.NUnit.UnitTests\Avalonia.Linux.NUnit.UnitTests.csproj", "{D6953EA3-3573-4CD2-92B8-B94C04C00E23}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Linux.NUnit.UnitTests", "tests\Avalonia.Linux.NUnit.UnitTests\Avalonia.Linux.NUnit.UnitTests.csproj", "{D6953EA3-3573-4CD2-92B8-B94C04C00E23}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
