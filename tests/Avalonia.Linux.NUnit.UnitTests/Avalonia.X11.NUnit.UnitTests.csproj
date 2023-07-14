@@ -9,7 +9,7 @@
 
     <SignAssembly>True</SignAssembly>
 
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\avalonia.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>../../build/avalonia.snk</AssemblyOriginatorKeyFile>
 
     <Product>Avalonia</Product>
 

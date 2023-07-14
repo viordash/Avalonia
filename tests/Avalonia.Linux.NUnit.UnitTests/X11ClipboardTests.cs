@@ -18,7 +18,7 @@ namespace Avalonia.X11.NUnit.UnitTests
         {
             Debug.WriteLine("---------------------------- Setup 0");
             AvaloniaLocator.CurrentMutable.Bind<IRenderLoop>()
-                .ToConstant(loop = mockIRenderLoop.Object);
+                .ToConstant(mockIRenderLoop.Object);
 
             var options = new X11PlatformOptions() { RenderingMode = new[] { X11RenderingMode.Software } };
             AvaloniaX11PlatformExtensions.InitializeX11Platform(options);
