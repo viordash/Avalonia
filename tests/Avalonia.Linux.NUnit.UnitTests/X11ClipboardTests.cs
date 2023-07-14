@@ -4,7 +4,7 @@ using Moq;
 using Avalonia.Platform;
 using Avalonia.Rendering;
 
-namespace Avalonia.Linux.NUnit.UnitTests
+namespace Avalonia.X11.NUnit.UnitTests
 {
     public class X11ClipboardTests
     {
