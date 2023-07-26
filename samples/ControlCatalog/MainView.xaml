@@ -15,7 +15,7 @@
       </Style>
     </Grid.Styles>
     <controls:HamburgerMenu Name="Sidebar">
-      <TabItem Header="Composition">
+      <!-- <TabItem Header="Composition">
         <pages:CompositionPage/>
       </TabItem>
       <TabItem Header="Acrylic">
@@ -47,7 +47,7 @@
       </TabItem>
       <TabItem Header="CheckBox">
         <pages:CheckBoxPage />
-      </TabItem>
+      </TabItem> -->
       <TabItem Header="Clipboard">
         <pages:ClipboardPage />
       </TabItem>

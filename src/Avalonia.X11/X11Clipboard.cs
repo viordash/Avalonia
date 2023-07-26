@@ -71,6 +71,8 @@ namespace Avalonia.X11
 
         private unsafe void OnEvent(ref XEvent ev)
         {
+            // System.Diagnostics.Debug.WriteLine($" ---- OnEvent 0 type:{ev.type}");
+
             if (ev.type == XEventName.SelectionRequest)
             {
                 var sel = ev.SelectionRequestEvent;
@@ -160,10 +162,14 @@ namespace Avalonia.X11
 
             if (ev.type == XEventName.PropertyNotify)
             {
+                // System.Diagnostics.Debug.WriteLine($" --- OnEvent 10 XEventName.PropertyNotify atom:{ev.PropertyEvent.atom:X}, state:{(PropertyState)ev.PropertyEvent.state}");
+
                 if (_incrReadTargetAtom == ev.PropertyEvent.atom && (PropertyState)ev.PropertyEvent.state == PropertyState.NewValue)
                 {
                     XGetWindowProperty(_x11.Display, _handle, _incrReadTargetAtom, IntPtr.Zero, new IntPtr(0x7fffffff), true, (IntPtr)Atom.AnyPropertyType,
                                 out var actualTypeAtom, out var actualFormat, out var nitems, out var bytes_after, out var prop);
+
+                    System.Diagnostics.Debug.WriteLine($" --- OnEvent 11 total: nitems:{nitems}, atom:{_incrReadTargetAtom:X}|{actualTypeAtom:X}, prop:{prop:X}");
 
                     if (_incrReadTargetAtom == actualTypeAtom && (int)nitems > 0)
                     {
@@ -179,6 +185,7 @@ namespace Avalonia.X11
                         _incrReadData.Clear();
                         _incrReadTargetAtom = IntPtr.Zero;
 
+                        System.Diagnostics.Debug.WriteLine($" ---------- OnEvent 12 _requestedDataTcs textEnc:{textEnc}, size:{bytes.Length}");
                         if (bytes.Length == 0)
                         {
                             _requestedDataTcs?.TrySetResult(null);
@@ -208,6 +215,7 @@ namespace Avalonia.X11
                     var bytes = _incrWriteData.Take(MaxRequestSize).ToArray();
                     _incrWriteData = _incrWriteData.Skip(bytes.Length).ToArray();
                     XChangeProperty(_x11.Display, _incrWriteWindow, _incrWriteProperty, _incrWriteTargetAtom, 8, PropertyMode.Replace, bytes, bytes.Length);
+                    System.Diagnostics.Debug.WriteLine($" ---- OnIncrWritePropertyEvent INCR target:{_incrWriteTargetAtom:X}, window:{_incrWriteWindow:X}, property:{_incrWriteProperty:X}, size:{bytes.Length}");
                 }
                 else
                 {
@@ -216,12 +224,14 @@ namespace Avalonia.X11
                     _incrWriteTargetAtom = IntPtr.Zero;
                     _incrWriteData = null;
                     _storeAtomTcs?.TrySetResult(true);
+                    System.Diagnostics.Debug.WriteLine($" ---- OnIncrWritePropertyEvent INCR stop target:{_incrWriteTargetAtom:X}");
                 }
             }
         }
 
         private unsafe IntPtr WriteTargetToProperty(IntPtr target, IntPtr window, IntPtr property)
         {
+            System.Diagnostics.Debug.WriteLine($" ---- WriteTargetToProperty 0 target:{target:X}, window:{window:X}, property:{property:X}");
             if (target == _x11.Atoms.TARGETS)
             {
                 var atoms = ConvertDataObject(_storedDataObject);
@@ -287,11 +297,13 @@ namespace Avalonia.X11
                     var total = new IntPtr[] { (IntPtr)bytes.Length };
                     XChangeProperty(_x11.Display, window, property, _x11.Atoms.INCR, 32, PropertyMode.Replace, total, total.Length);
                     XSelectInput(_x11.Display, window, new IntPtr((int)EventMask.PropertyChangeMask));
+                    System.Diagnostics.Debug.WriteLine($" ---- WriteTargetToProperty INCR start target:{target:X}, window:{window:X} | {_handle:X}, property:{property:X}, total:{bytes.Length}");
                 }
                 else
                 {
                     XChangeProperty(_x11.Display, window, property, target, 8, PropertyMode.Replace, bytes, bytes.Length);
                     _storeAtomTcs?.TrySetResult(true);
+                    System.Diagnostics.Debug.WriteLine($" ---- WriteTargetToProperty NORM target:{target:X}, window:{window:X} | {_handle:X}, property:{property:X}, total:{bytes.Length}");
                 }
 
                 return property;

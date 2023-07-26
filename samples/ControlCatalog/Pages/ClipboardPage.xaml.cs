@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -33,8 +35,11 @@ namespace ControlCatalog.Pages
 
         private async void CopyText(object? sender, RoutedEventArgs args)
         {
-            if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard && ClipboardContent is { } clipboardContent)
+            if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard && ClipboardContent is { } clipboardContent){
+                    System.Diagnostics.Debug.WriteLine($" ------------------------- CopyText 0");
                 await clipboard.SetTextAsync(clipboardContent.Text ?? String.Empty);
+                    System.Diagnostics.Debug.WriteLine($" ------------------------- CopyText 1");
+            }
         }
 
         private async void PasteText(object? sender, RoutedEventArgs args)
@@ -50,8 +55,11 @@ namespace ControlCatalog.Pages
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
             {
                 var dataObject = new DataObject();
-                dataObject.Set(DataFormats.Text, ClipboardContent.Text ?? string.Empty);
+                dataObject.Set("UTF8_STRING", ClipboardContent.Text ?? string.Empty);
+
+                    System.Diagnostics.Debug.WriteLine($" ------------------------- SetDataObjectAsync 0");
                 await clipboard.SetDataObjectAsync(dataObject);
+                    System.Diagnostics.Debug.WriteLine($" ------------------------- SetDataObjectAsync 1");
             }
         }
 
@@ -59,7 +67,7 @@ namespace ControlCatalog.Pages
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
             {
-                ClipboardContent.Text = await clipboard.GetDataAsync(DataFormats.Text) as string ?? string.Empty;
+                ClipboardContent.Text = await clipboard.GetDataAsync("UTF8_STRING") as string ?? string.Empty;
             }
         }
 
@@ -119,6 +127,7 @@ namespace ControlCatalog.Pages
             }
         }
 
+int counter = 0;
         private async void CopyBitmapDataObject(object? sender, RoutedEventArgs args)
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
@@ -136,6 +145,13 @@ namespace ControlCatalog.Pages
                 var dataObject = new DataObject();
                 dataObject.Set(format, bytes);
                 await clipboard.SetDataObjectAsync(dataObject);
+                await Task.Delay(100);
+
+                var formats = await clipboard.GetFormatsAsync();
+                if (formats.Contains("image/bmp")) {
+                    Debug.WriteLine($"   ------ image/bmp {counter++}");
+                    // btnClear.Text = $"s-{counter++}";
+                }
             }
         }
 
@@ -143,33 +159,33 @@ namespace ControlCatalog.Pages
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
             {
-                var format = "Bitmap";
+                var format = "image/bmp";
                 var obj = await clipboard.GetDataAsync(format);
                 var bytes = obj as IEnumerable<byte>;
-                if (bytes == null)
-                {
-                    format = "Dib";
-                    obj = await clipboard.GetDataAsync(format);
-                    bytes = obj as IEnumerable<byte>;
-                }
-                if (bytes == null)
-                {
-                    format = "image/bmp";
-                    obj = await clipboard.GetDataAsync(format);
-                    bytes = obj as IEnumerable<byte>;
-                }
-                if (bytes == null)
-                {
-                    format = "image/png";
-                    obj = await clipboard.GetDataAsync(format);
-                    bytes = obj as IEnumerable<byte>;
-                }
-                if (bytes == null)
-                {
-                    format = "image/jpeg";
-                    obj = await clipboard.GetDataAsync(format);
-                    bytes = obj as IEnumerable<byte>;
-                }
+                // if (bytes == null)
+                // {
+                //     format = "Dib";
+                //     obj = await clipboard.GetDataAsync(format);
+                //     bytes = obj as IEnumerable<byte>;
+                // }
+                // if (bytes == null)
+                // {
+                //     format = "image/bmp";
+                //     obj = await clipboard.GetDataAsync(format);
+                //     bytes = obj as IEnumerable<byte>;
+                // }
+                // if (bytes == null)
+                // {
+                //     format = "image/png";
+                //     obj = await clipboard.GetDataAsync(format);
+                //     bytes = obj as IEnumerable<byte>;
+                // }
+                // if (bytes == null)
+                // {
+                //     format = "image/jpeg";
+                //     obj = await clipboard.GetDataAsync(format);
+                //     bytes = obj as IEnumerable<byte>;
+                // }
 
                 if (bytes != null)
                 {
