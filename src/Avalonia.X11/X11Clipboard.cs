@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -11,6 +12,51 @@ namespace Avalonia.X11
 {
     internal class X11Clipboard : IClipboard
     {
+        #region inner classes
+        private class IncrDataReader
+        {
+            public readonly IntPtr Property;
+            private readonly int _total;
+            private readonly Action<IntPtr, byte[]> _onCompleted;
+            private readonly Action<IntPtr> _onError;
+            private readonly List<byte> _readData;
+
+            public IncrDataReader(IntPtr property, int total, Action<IntPtr, byte[]> onCompleted, Action<IntPtr> onError)
+            {
+                Property = property;
+                _total = total;
+                _onCompleted = onCompleted;
+                _onError = onError;
+                _readData = new List<byte>();
+            }
+
+            public void Read(IntPtr data, int size)
+            {
+                if (size > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($" ---------- IncrDataReader.OnReadEvent {Property:X} acc, size:{size}");
+                    var buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(size);
+                    Marshal.Copy(data, buffer, 0, size);
+                    _readData.AddRange(buffer.Take(size));
+                    System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+                    return;
+                }
+
+                if (_readData.Count == _total)
+                {
+                    System.Diagnostics.Debug.WriteLine($" ---------- IncrDataReader.OnReadEvent {Property:X} completed total:{_readData.Count}");
+                    _onCompleted(Property, _readData.ToArray());
+                    return;
+                }
+
+                System.Diagnostics.Debug.WriteLine($" ---------- IncrDataReader.OnReadEvent {Property:X} error total:{_readData.Count}!={_total}");
+                _onError(Property);
+
+            }
+        }
+
+        #endregion
+
         private readonly AvaloniaX11Platform _platform;
         private readonly X11Info _x11;
         private IDataObject _storedDataObject;
@@ -20,13 +66,14 @@ namespace Avalonia.X11
         private TaskCompletionSource<object> _requestedDataTcs;
         private readonly IntPtr[] _textAtoms;
         private readonly IntPtr _avaloniaSaveTargetsAtom;
-        private IntPtr _incrReadTargetAtom;
-        private readonly List<byte> _incrReadData;
+
         private IntPtr _incrWriteTargetAtom;
         private IntPtr _incrWriteWindow;
         private IntPtr _incrWriteProperty;
         private byte[] _incrWriteData;
         private const int MaxRequestSize = 0x40000;
+
+        private readonly ConcurrentDictionary<IntPtr, IncrDataReader> _incrDataReaders;
 
         public X11Clipboard(AvaloniaX11Platform platform)
         {
@@ -44,8 +91,7 @@ namespace Avalonia.X11
                 _x11.Atoms.UTF16_STRING
             }.Where(a => a != IntPtr.Zero).ToArray();
 
-            _incrReadTargetAtom = IntPtr.Zero;
-            _incrReadData = new List<byte>();
+            _incrDataReaders = new();
             _incrWriteTargetAtom = IntPtr.Zero;
             _incrWriteWindow = IntPtr.Zero;
             _incrWriteProperty = IntPtr.Zero;
@@ -71,8 +117,6 @@ namespace Avalonia.X11
 
         private unsafe void OnEvent(ref XEvent ev)
         {
-            // System.Diagnostics.Debug.WriteLine($" ---- OnEvent 0 type:{ev.type}");
-
             if (ev.type == XEventName.SelectionRequest)
             {
                 var sel = ev.SelectionRequestEvent;
@@ -142,9 +186,28 @@ namespace Avalonia.X11
                                 _requestedDataTcs?.TrySetResult(null);
                             else
                             {
-                                _incrReadTargetAtom = sel.property;
-                                var total = *((int*)prop.ToPointer());
-                                _incrReadData.Capacity = total;
+                                _incrDataReaders.TryAdd(sel.property, new IncrDataReader(sel.property, *(int*)prop.ToPointer(),
+                                    (property, bytes) =>
+                                    {
+                                        _incrDataReaders.TryRemove(property, out _);
+                                        var textEnc = GetStringEncoding(property);
+
+                                        if (textEnc != null)
+                                        {
+                                            var text = textEnc.GetString(bytes);
+                                            _requestedDataTcs?.TrySetResult(text);
+                                        }
+                                        else
+                                        {
+                                            _requestedDataTcs?.TrySetResult(bytes);
+                                        }
+                                    },
+                                     (property) =>
+                                     {
+                                         _incrDataReaders.TryRemove(property, out _);
+                                         _requestedDataTcs?.TrySetResult(null);
+
+                                     }));
                             }
                         }
                         else
@@ -162,44 +225,12 @@ namespace Avalonia.X11
 
             if (ev.type == XEventName.PropertyNotify)
             {
-                // System.Diagnostics.Debug.WriteLine($" --- OnEvent 10 XEventName.PropertyNotify atom:{ev.PropertyEvent.atom:X}, state:{(PropertyState)ev.PropertyEvent.state}");
-
-                if (_incrReadTargetAtom == ev.PropertyEvent.atom && (PropertyState)ev.PropertyEvent.state == PropertyState.NewValue)
+                if ((PropertyState)ev.PropertyEvent.state == PropertyState.NewValue && _incrDataReaders.TryGetValue(ev.PropertyEvent.atom, out var incrDataReader))
                 {
-                    XGetWindowProperty(_x11.Display, _handle, _incrReadTargetAtom, IntPtr.Zero, new IntPtr(0x7fffffff), true, (IntPtr)Atom.AnyPropertyType,
-                                out var actualTypeAtom, out var actualFormat, out var nitems, out var bytes_after, out var prop);
+                    XGetWindowProperty(_x11.Display, _handle, incrDataReader.Property, IntPtr.Zero, new IntPtr(0x7fffffff), true, (IntPtr)Atom.AnyPropertyType,
+                            out var actualTypeAtom, out var actualFormat, out var nitems, out var bytes_after, out var prop);
+                    incrDataReader.Read(prop, (int)nitems * (actualFormat / 8));
 
-                    System.Diagnostics.Debug.WriteLine($" --- OnEvent 11 total: nitems:{nitems}, atom:{_incrReadTargetAtom:X}|{actualTypeAtom:X}, prop:{prop:X}");
-
-                    if (_incrReadTargetAtom == actualTypeAtom && (int)nitems > 0)
-                    {
-                        var chunkSize = (int)nitems * (actualFormat / 8);
-                        var buffer = new byte[chunkSize];
-                        Marshal.Copy(prop, buffer, 0, chunkSize);
-                        _incrReadData.AddRange(buffer);
-                    }
-                    else
-                    {
-                        var bytes = _incrReadData.ToArray();
-                        var textEnc = GetStringEncoding(_incrReadTargetAtom);
-                        _incrReadData.Clear();
-                        _incrReadTargetAtom = IntPtr.Zero;
-
-                        System.Diagnostics.Debug.WriteLine($" ---------- OnEvent 12 _requestedDataTcs textEnc:{textEnc}, size:{bytes.Length}");
-                        if (bytes.Length == 0)
-                        {
-                            _requestedDataTcs?.TrySetResult(null);
-                        }
-                        else if (textEnc != null)
-                        {
-                            var text = textEnc.GetString(bytes);
-                            _requestedDataTcs?.TrySetResult(text);
-                        }
-                        else
-                        {
-                            _requestedDataTcs?.TrySetResult(bytes);
-                        }
-                    }
                     XFree(prop);
                     return;
                 }
