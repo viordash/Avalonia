@@ -14,22 +14,22 @@ namespace Avalonia.X11
         #region inner classes
         private class IncrDataReader
         {
+            private readonly X11Info _x11;
             public readonly IntPtr Property;
             private readonly int _total;
-            private readonly Action<IntPtr, byte[]> _onCompleted;
-            private readonly Action<IntPtr> _onError;
+            private readonly Action<IntPtr, object> _onCompleted;
             private readonly List<byte> _readData;
 
-            public IncrDataReader(IntPtr property, int total, Action<IntPtr, byte[]> onCompleted, Action<IntPtr> onError)
+            public IncrDataReader(X11Info x11, IntPtr property, int total, Action<IntPtr, object> onCompleted)
             {
+                _x11 = x11;
                 Property = property;
                 _total = total;
                 _onCompleted = onCompleted;
-                _onError = onError;
                 _readData = new List<byte>();
             }
 
-            public void Read(IntPtr data, int size)
+            public void Append(IntPtr data, int size)
             {
                 if (size > 0)
                 {
@@ -41,16 +41,24 @@ namespace Avalonia.X11
                     return;
                 }
 
-                if (_readData.Count == _total)
+                if (_readData.Count != _total)
                 {
-                    System.Diagnostics.Debug.WriteLine($" ---------- IncrDataReader.OnReadEvent {Property:X} completed total:{_readData.Count}");
-                    _onCompleted(Property, _readData.ToArray());
+                    System.Diagnostics.Debug.WriteLine($" ---------- IncrDataReader.OnReadEvent {Property:X} error total:{_readData.Count}!={_total}");
+                    _onCompleted(Property, null);
                     return;
                 }
 
-                System.Diagnostics.Debug.WriteLine($" ---------- IncrDataReader.OnReadEvent {Property:X} error total:{_readData.Count}!={_total}");
-                _onError(Property);
-
+                System.Diagnostics.Debug.WriteLine($" ---------- IncrDataReader.OnReadEvent {Property:X} completed total:{_readData.Count}");
+                var textEnc = GetStringEncoding(_x11.Atoms, Property);
+                var bytes = _readData.ToArray();
+                if (textEnc != null)
+                {
+                    _onCompleted(Property, textEnc.GetString(bytes));
+                }
+                else
+                {
+                    _onCompleted(Property, bytes);
+                }
             }
         }
 
@@ -134,14 +142,14 @@ namespace Avalonia.X11
             return _textAtoms.Contains(atom);
         }
 
-        private Encoding GetStringEncoding(IntPtr atom)
+        private static Encoding GetStringEncoding(X11Atoms atoms, IntPtr atom)
         {
-            return (atom == _x11.Atoms.XA_STRING
-                    || atom == _x11.Atoms.OEMTEXT)
+            return (atom == atoms.XA_STRING
+                    || atom == atoms.OEMTEXT)
                 ? Encoding.ASCII
-                : atom == _x11.Atoms.UTF8_STRING
+                : atom == atoms.UTF8_STRING
                     ? Encoding.UTF8
-                    : atom == _x11.Atoms.UTF16_STRING
+                    : atom == atoms.UTF16_STRING
                         ? Encoding.Unicode
                         : null;
         }
@@ -204,7 +212,7 @@ namespace Avalonia.X11
                             _requestedFormatsTcs?.TrySetResult(formats);
                         }
                     }
-                    else if ((textEnc = GetStringEncoding(actualTypeAtom)) != null)
+                    else if ((textEnc = GetStringEncoding(_x11.Atoms, actualTypeAtom)) != null)
                     {
                         var text = textEnc.GetString((byte*)prop.ToPointer(), nitems.ToInt32());
                         _requestedDataTcs?.TrySetResult(text);
@@ -217,28 +225,12 @@ namespace Avalonia.X11
                                 _requestedDataTcs?.TrySetResult(null);
                             else
                             {
-                                _incrDataReaders[sel.property] = new IncrDataReader(sel.property, *(int*)prop.ToPointer(),
-                                    (property, bytes) =>
+                                _incrDataReaders[sel.property] = new IncrDataReader(_x11, sel.property, *(int*)prop.ToPointer(),
+                                    (property, obj) =>
                                     {
                                         _incrDataReaders.Remove(property);
-                                        var textEnc = GetStringEncoding(property);
-
-                                        if (textEnc != null)
-                                        {
-                                            var text = textEnc.GetString(bytes);
-                                            _requestedDataTcs?.TrySetResult(text);
-                                        }
-                                        else
-                                        {
-                                            _requestedDataTcs?.TrySetResult(bytes);
-                                        }
-                                    },
-                                     (property) =>
-                                     {
-                                         _incrDataReaders.Remove(property);
-                                         _requestedDataTcs?.TrySetResult(null);
-
-                                     });
+                                        _requestedDataTcs?.TrySetResult(obj);
+                                    });
                             }
                         }
                         else
@@ -260,7 +252,7 @@ namespace Avalonia.X11
                 {
                     XGetWindowProperty(_x11.Display, _handle, incrDataReader.Property, IntPtr.Zero, new IntPtr(0x7fffffff), true, (IntPtr)Atom.AnyPropertyType,
                             out var actualTypeAtom, out var actualFormat, out var nitems, out var bytes_after, out var prop);
-                    incrDataReader.Read(prop, (int)nitems * (actualFormat / 8));
+                    incrDataReader.Append(prop, (int)nitems * (actualFormat / 8));
 
                     XFree(prop);
                     return;
@@ -319,7 +311,7 @@ namespace Avalonia.X11
                 {
                     if (objValue is string s)
                     {
-                        var textEnc = GetStringEncoding(target) ?? Encoding.UTF8;
+                        var textEnc = GetStringEncoding(_x11.Atoms, target) ?? Encoding.UTF8;
                         bytes = textEnc.GetBytes(s);
                     }
                     else
