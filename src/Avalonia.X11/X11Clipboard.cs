@@ -73,7 +73,7 @@ namespace Avalonia.X11
         private byte[] _incrWriteData;
         private const int MaxRequestSize = 0x40000;
 
-        private readonly ConcurrentDictionary<IntPtr, IncrDataReader> _incrDataReaders;
+        private readonly Dictionary<IntPtr, IncrDataReader> _incrDataReaders;
 
         public X11Clipboard(AvaloniaX11Platform platform)
         {
@@ -186,10 +186,10 @@ namespace Avalonia.X11
                                 _requestedDataTcs?.TrySetResult(null);
                             else
                             {
-                                _incrDataReaders.TryAdd(sel.property, new IncrDataReader(sel.property, *(int*)prop.ToPointer(),
+                                _incrDataReaders[sel.property] = new IncrDataReader(sel.property, *(int*)prop.ToPointer(),
                                     (property, bytes) =>
                                     {
-                                        _incrDataReaders.TryRemove(property, out _);
+                                        _incrDataReaders.Remove(property);
                                         var textEnc = GetStringEncoding(property);
 
                                         if (textEnc != null)
@@ -204,10 +204,10 @@ namespace Avalonia.X11
                                     },
                                      (property) =>
                                      {
-                                         _incrDataReaders.TryRemove(property, out _);
+                                         _incrDataReaders.Remove(property);
                                          _requestedDataTcs?.TrySetResult(null);
 
-                                     }));
+                                     });
                             }
                         }
                         else
