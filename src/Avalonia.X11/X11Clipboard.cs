@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -55,6 +54,47 @@ namespace Avalonia.X11
             }
         }
 
+        private class IncrDataWriter
+        {
+            private readonly IntPtr _display;
+            private readonly IntPtr _window;
+            private readonly IntPtr _property;
+            private readonly IntPtr _target;
+            private readonly Action<IntPtr> _onCompleted;
+            private byte[] _data;
+
+            public IncrDataWriter(IntPtr display, IntPtr window, IntPtr property, IntPtr target, byte[] data, Action<IntPtr> onCompleted)
+            {
+                _display = display;
+                _window = window;
+                _property = property;
+                _target = target;
+                _data = data;
+                _onCompleted = onCompleted;
+
+                XSelectInput(_display, _window, new IntPtr((int)EventMask.PropertyChangeMask));
+                System.Diagnostics.Debug.WriteLine($" ---- WriteTargetToProperty INCR start target:{_target:X}, window:{_window:X}, property:{_property:X}, total:{_data.Length}");
+            }
+
+            public void OnEvent(ref XEvent ev)
+            {
+                if (ev.type == XEventName.PropertyNotify && (PropertyState)ev.PropertyEvent.state == PropertyState.Delete)
+                {
+                    if (_data?.Length > 0)
+                    {
+                        var bytes = _data.Take(MaxRequestSize).ToArray();
+                        _data = _data.Skip(bytes.Length).ToArray();
+                        XChangeProperty(_display, _window, _property, _target, 8, PropertyMode.Replace, bytes, bytes.Length);
+                        System.Diagnostics.Debug.WriteLine($" ---- IncrDataWriter.OnEvent INCR target:{_target:X}, window:{_window:X}, property:{_property:X}, size:{bytes.Length}");
+                        return;
+                    }
+
+                    XChangeProperty(_display, _window, _property, _target, 8, PropertyMode.Replace, IntPtr.Zero, 0);
+                    _onCompleted(_window);
+                    System.Diagnostics.Debug.WriteLine($" ---- IncrDataWriter.OnEvent INCR stop target:{_target:X}");
+                }
+            }
+        }
         #endregion
 
         private readonly AvaloniaX11Platform _platform;
@@ -67,12 +107,7 @@ namespace Avalonia.X11
         private readonly IntPtr[] _textAtoms;
         private readonly IntPtr _avaloniaSaveTargetsAtom;
 
-        private IntPtr _incrWriteTargetAtom;
-        private IntPtr _incrWriteWindow;
-        private IntPtr _incrWriteProperty;
-        private byte[] _incrWriteData;
         private const int MaxRequestSize = 0x40000;
-
         private readonly Dictionary<IntPtr, IncrDataReader> _incrDataReaders;
 
         public X11Clipboard(AvaloniaX11Platform platform)
@@ -92,10 +127,6 @@ namespace Avalonia.X11
             }.Where(a => a != IntPtr.Zero).ToArray();
 
             _incrDataReaders = new();
-            _incrWriteTargetAtom = IntPtr.Zero;
-            _incrWriteWindow = IntPtr.Zero;
-            _incrWriteProperty = IntPtr.Zero;
-            _incrWriteData = null;
         }
 
         private bool IsStringAtom(IntPtr atom)
@@ -237,29 +268,6 @@ namespace Avalonia.X11
             }
         }
 
-        private void OnIncrWritePropertyEvent(ref XEvent ev)
-        {
-            if (ev.type == XEventName.PropertyNotify && (PropertyState)ev.PropertyEvent.state == PropertyState.Delete)
-            {
-                if (_incrWriteData?.Length > 0)
-                {
-                    var bytes = _incrWriteData.Take(MaxRequestSize).ToArray();
-                    _incrWriteData = _incrWriteData.Skip(bytes.Length).ToArray();
-                    XChangeProperty(_x11.Display, _incrWriteWindow, _incrWriteProperty, _incrWriteTargetAtom, 8, PropertyMode.Replace, bytes, bytes.Length);
-                    System.Diagnostics.Debug.WriteLine($" ---- OnIncrWritePropertyEvent INCR target:{_incrWriteTargetAtom:X}, window:{_incrWriteWindow:X}, property:{_incrWriteProperty:X}, size:{bytes.Length}");
-                }
-                else
-                {
-                    _platform.Windows.Remove(_incrWriteWindow);
-                    XChangeProperty(_x11.Display, _incrWriteWindow, _incrWriteProperty, _incrWriteTargetAtom, 8, PropertyMode.Replace, IntPtr.Zero, 0);
-                    _incrWriteTargetAtom = IntPtr.Zero;
-                    _incrWriteData = null;
-                    _storeAtomTcs?.TrySetResult(true);
-                    System.Diagnostics.Debug.WriteLine($" ---- OnIncrWritePropertyEvent INCR stop target:{_incrWriteTargetAtom:X}");
-                }
-            }
-        }
-
         private unsafe IntPtr WriteTargetToProperty(IntPtr target, IntPtr window, IntPtr property)
         {
             System.Diagnostics.Debug.WriteLine($" ---- WriteTargetToProperty 0 target:{target:X}, window:{window:X}, property:{property:X}");
@@ -320,15 +328,18 @@ namespace Avalonia.X11
 
                 if (bytes.Length > MaxRequestSize && window != _handle)
                 {
-                    _incrWriteTargetAtom = target;
-                    _incrWriteWindow = window;
-                    _incrWriteProperty = property;
-                    _incrWriteData = bytes;
-                    _platform.Windows[window] = OnIncrWritePropertyEvent;
+                    var incrDataWriter = new IncrDataWriter(_x11.Display, window, property, target, bytes,
+                         (w) =>
+                         {
+                             _platform.Windows.Remove(w);
+                             _storeAtomTcs?.TrySetResult(true);
+
+                         });
+
+                    _platform.Windows[window] = incrDataWriter.OnEvent;
+
                     var total = new IntPtr[] { (IntPtr)bytes.Length };
                     XChangeProperty(_x11.Display, window, property, _x11.Atoms.INCR, 32, PropertyMode.Replace, total, total.Length);
-                    XSelectInput(_x11.Display, window, new IntPtr((int)EventMask.PropertyChangeMask));
-                    System.Diagnostics.Debug.WriteLine($" ---- WriteTargetToProperty INCR start target:{target:X}, window:{window:X} | {_handle:X}, property:{property:X}, total:{bytes.Length}");
                 }
                 else
                 {
@@ -336,10 +347,8 @@ namespace Avalonia.X11
                     _storeAtomTcs?.TrySetResult(true);
                     System.Diagnostics.Debug.WriteLine($" ---- WriteTargetToProperty NORM target:{target:X}, window:{window:X} | {_handle:X}, property:{property:X}, total:{bytes.Length}");
                 }
-
                 return property;
             }
-
             return IntPtr.Zero;
         }
 
